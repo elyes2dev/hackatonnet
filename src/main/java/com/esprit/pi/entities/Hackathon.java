@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,28 +24,40 @@ public class Hackathon implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonProperty("title")
     private String title;
+
+    @JsonProperty("location")
     private String location;
+
+    @JsonProperty("logo")
     private String logo;
 
+    @JsonProperty("maxMembers")
     private int maxMembers;
 
+    @JsonProperty("isOnline")
     private Boolean isOnline;
 
+    @JsonProperty("description")
     private String description;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @JsonProperty("startDate")
     private Date startDate;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @JsonProperty("endDate")
     private Date endDate;
 
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
+    @JsonProperty("createdBy")
     private User createdBy;
 
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
+    @JsonProperty("createdAt")
     private Date createdAt;
 
     @OneToMany(mappedBy = "hackathon", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -55,4 +68,13 @@ public class Hackathon implements Serializable {
 
     @OneToMany(mappedBy = "hackathon", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Team> teams;
+
+    public User getCreatedBy() {
+        return this.createdBy;
+    }
+
+    public Long getId() {
+        return this.id;
+    }
+
 }

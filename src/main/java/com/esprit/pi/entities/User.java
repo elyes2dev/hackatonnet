@@ -81,4 +81,8 @@ public class User {
         HEAD_COACH,
         MASTER_MENTOR
     }
+
+    public Long getId() {
+        return this.id;
+    }
 }

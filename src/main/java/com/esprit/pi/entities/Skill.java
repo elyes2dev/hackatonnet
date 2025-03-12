@@ -30,4 +30,19 @@ public class Skill {
     @ManyToMany(mappedBy = "skills") // mappedBy indicates the owning side of the relationship
     private Set<User> users;
 
+    public String getName() {
+        return name;
+    }
+
+    public skillEnum getLevel() {
+        return level;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setLevel(skillEnum level) {
+        this.level = level;
+    }
 }

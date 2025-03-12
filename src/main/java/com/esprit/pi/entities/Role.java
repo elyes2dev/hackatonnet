@@ -15,10 +15,21 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 public class Role {
+    @Setter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
     @ManyToMany(mappedBy = "roles")
     private Set<User> users;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+
 }

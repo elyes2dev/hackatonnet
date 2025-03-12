@@ -25,24 +25,25 @@ public class Resources {
 
     private String name;
     private String description;
-    private String photo;
-    private String niveau;
 
+    @Enumerated(EnumType.STRING)
+    private skillEnum niveau;
+    private String image;
     @ManyToOne
     @JoinColumn(name = "workshop_id", nullable = false)
     private Workshop workshop;
 
-    @OneToMany(mappedBy = "resource")
-    private List<Document> documents;
+ //   @OneToMany(mappedBy = "resource")
+ //   private List<Document> documents;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinTable(name = "resource_images",
-            joinColumns = {
-                    @JoinColumn(name = "id_resources")
-            },
-            inverseJoinColumns = {
-                    @JoinColumn(name = "id_image")
-            }
-    )
-    private Set<ImageModel> resourceImages;
+   // @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+   // @JoinTable(name = "resource_images",
+     //       joinColumns = {
+     //               @JoinColumn(name = "id_resources")
+     //       },
+    //        inverseJoinColumns = {
+    //                @JoinColumn(name = "id_image")
+   //         }
+   // )
+  //  private Set<ImageModel> resourceImages;
 }

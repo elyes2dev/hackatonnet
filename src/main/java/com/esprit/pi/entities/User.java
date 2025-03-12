@@ -39,7 +39,7 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),

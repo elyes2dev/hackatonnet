@@ -1,7 +1,9 @@
 package com.esprit.pi.Controller;
 
+import com.esprit.pi.DTO.SponsorInfoDTO;
 import com.esprit.pi.Service.IPrizeService;
 import com.esprit.pi.entities.Prize;
+import com.esprit.pi.entities.User;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -81,4 +83,10 @@ public class PrizeController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    // Get sponsors by badge (sorted) for a specific hackathon
+    @GetMapping("/sponsors-by-badge/{hackathonId}")
+    public ResponseEntity<List<SponsorInfoDTO>> getSponsorsByBadge(@PathVariable Long hackathonId) {
+        return ResponseEntity.ok(prizeService.getSponsorsByHackathon(hackathonId));
+    }
+
 }

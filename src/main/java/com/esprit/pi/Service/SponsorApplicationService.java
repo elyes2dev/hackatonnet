@@ -9,6 +9,7 @@ import com.esprit.pi.entities.SponsorApplication;
 import com.esprit.pi.entities.User;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,6 +25,11 @@ public class SponsorApplicationService implements ISponsorApplicationService{
     IUserRepository userRepository;
     @Autowired
     IRoleRepository roleRepository;
+    @Autowired
+    SponsorRewardService sponsorRewardService;
+
+    static final int EXPIRATION_MINUTES = 2; // 2 minutes for testing
+
 
     public SponsorApplication submitApplication(long userId, SponsorApplication application) {
         User user = userRepository.findById(userId)
@@ -65,6 +71,11 @@ public class SponsorApplicationService implements ISponsorApplicationService{
             userRepository.save(user);
         }
 
+        // Initialize SponsorReward record for the new sponsor
+        if (user.getSponsorReward() == null) {
+            sponsorRewardService.createSponsorReward(user);
+        }
+
         return sponsorApplicationRepository.save(application);
     }
 
@@ -78,4 +89,24 @@ public class SponsorApplicationService implements ISponsorApplicationService{
     public void deleteApplication(int id) {
         sponsorApplicationRepository.deleteById(id);
     }
+
+
+    @Scheduled(cron = "0 * * * * ?") // Run every minute for testing
+    public void autoRejectExpiredApplications() {
+        LocalDateTime expirationThreshold = LocalDateTime.now().minusMinutes(EXPIRATION_MINUTES);
+
+        List<SponsorApplication> expiredApplications = sponsorApplicationRepository
+                .findByStatusAndSubmittedAtBefore(ApplicationStatus.PENDING, expirationThreshold);
+
+        if (!expiredApplications.isEmpty()) {
+            expiredApplications.forEach(application -> {
+                application.setStatus(ApplicationStatus.REJECTED);
+                application.setReviewedAt(LocalDateTime.now());
+            });
+
+            sponsorApplicationRepository.saveAll(expiredApplications);
+            System.out.println("Auto-rejected " + expiredApplications.size() + " expired applications.");
+        }
+    }
+
 }

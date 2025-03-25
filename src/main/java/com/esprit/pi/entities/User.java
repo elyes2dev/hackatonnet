@@ -62,6 +62,9 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private SponsorApplication sponsorApplication; // One-to-One Relationship
 
+    @OneToOne(mappedBy = "sponsor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private SponsorReward sponsorReward;
+
     // Many-to-many relationship with Team through TeamMembers
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamMembers> teamMembers;

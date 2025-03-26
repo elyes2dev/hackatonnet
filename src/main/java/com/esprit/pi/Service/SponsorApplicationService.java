@@ -27,8 +27,11 @@ public class SponsorApplicationService implements ISponsorApplicationService{
     IRoleRepository roleRepository;
     @Autowired
     SponsorRewardService sponsorRewardService;
+    @Autowired
+    private EmailService emailService;
 
-    static final int EXPIRATION_MINUTES = 2; // 2 minutes for testing
+
+    static final int EXPIRATION_MINUTES = 5; // 2 minutes for testing
 
 
     public SponsorApplication submitApplication(long userId, SponsorApplication application) {
@@ -75,6 +78,8 @@ public class SponsorApplicationService implements ISponsorApplicationService{
         if (user.getSponsorReward() == null) {
             sponsorRewardService.createSponsorReward(user);
         }
+        // ✅ Send approval email
+        sendApplicationStatusEmail(user, "APPROVED");
 
         return sponsorApplicationRepository.save(application);
     }
@@ -83,6 +88,10 @@ public class SponsorApplicationService implements ISponsorApplicationService{
         SponsorApplication application = getApplicationById(id);
         application.setStatus(ApplicationStatus.REJECTED);
         application.setReviewedAt(LocalDateTime.now());
+
+        // ✅ Send rejection email
+        sendApplicationStatusEmail(application.getUser(), "REJECTED");
+
         return sponsorApplicationRepository.save(application);
     }
 
@@ -102,11 +111,161 @@ public class SponsorApplicationService implements ISponsorApplicationService{
             expiredApplications.forEach(application -> {
                 application.setStatus(ApplicationStatus.REJECTED);
                 application.setReviewedAt(LocalDateTime.now());
+                sendApplicationStatusEmail(application.getUser(), "REJECTED (Expired)");
             });
 
             sponsorApplicationRepository.saveAll(expiredApplications);
             System.out.println("Auto-rejected " + expiredApplications.size() + " expired applications.");
         }
+    }
+
+    private void sendApplicationStatusEmail(User user, String status) {
+        String subject = "Hackathon Sponsor Application - Status Update";
+
+        String content = String.format("""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f4f4f4;
+                }
+                .email-container {
+                    background-color: white;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    overflow: hidden;
+                }
+                .header {
+                    background-color: #0066cc;
+                    color: white;
+                    text-align: center;
+                    padding: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .logo {
+                    max-height: 60px;
+                    margin-right: 20px;
+                }
+                .header h1 {
+                    margin: 0;
+                    font-size: 1.5em;
+                }
+                .content {
+                    padding: 20px;
+                }
+                .status {
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    display: inline-block;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    margin-bottom: 15px;
+                }
+                .footer {
+                    background-color: #f4f4f4;
+                    color: #666;
+                    text-align: center;
+                    padding: 10px;
+                    font-size: 0.8em;
+                    border-top: 1px solid #e0e0e0;
+                }
+                .signature {
+                    margin-top: 20px;
+                    font-style: italic;
+                    color: #555;
+                }
+                a {
+                    color: #0066cc;
+                    text-decoration: none;
+                }
+                a:hover {
+                    text-decoration: underline;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="email-container">
+                <div class="header">
+                    <img src="cid:logoImage" alt="Hackathon Logo" class="logo">
+                    <h1>Sponsor Application Status</h1>
+                </div>
+
+                <div class="content">
+                    <p>Dear %s,</p>
+
+                    <p>We are writing to inform you about the status of your sponsor application for our upcoming Hackathon event.</p>
+
+                    <div class="status" style="background-color: %s; color: white;">
+                        Application Status: %s
+                    </div>
+
+                    %s
+
+                    <div class="signature">
+                        <p>Best regards,<br>
+                        The Hackathon Sponsorship Team</p>
+
+                        <p>Questions? Contact us at <a href="mortadhabennaceur390@gmail.com">sponsors@hackathon.com</a></p>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p>© %d Hackathon Event | Empowering Innovation | <a href="https://www.ourhackathon.com">www.ourhackathon.com</a></p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """,
+                user.getName(),
+                determineStatusColor(status),
+                status,
+                getAdditionalMessage(status),
+                java.time.Year.now().getValue()
+        );
+
+        emailService.sendEmailWithLogo(user.getEmail(), subject, content);
+    }
+
+    // Helper method to determine color based on status
+    private String determineStatusColor(String status) {
+        return switch (status.toUpperCase()) {
+            case "APPROVED" -> "#28a745";  // Green for approved
+            case "REJECTED" -> "#dc3545";  // Red for rejected
+            case "PENDING" -> "#ffc107";   // Yellow for pending
+            default -> "#007bff";          // Blue for other statuses
+        };
+    }
+
+    // Helper method to add contextual messages
+    private String getAdditionalMessage(String status) {
+        return switch (status.toUpperCase()) {
+            case "APPROVED" -> """
+            <p>Congratulations! We are excited to have you as a valued sponsor for our upcoming Hackathon. 
+            Our team will be in touch soon with further details about your sponsorship benefits and next steps.</p>
+        """;
+            case "REJECTED" -> """
+            <p>After careful review, we regret to inform you that your application did not meet our current sponsorship criteria. 
+            We appreciate your interest and encourage you to apply again in future events.</p>
+        """;
+            case "PENDING" -> """
+            <p>Your application is currently under review. Our sponsorship team is carefully evaluating 
+            your submission and will provide a final decision soon.</p>
+        """;
+            default -> """
+            <p>Thank you for your interest in our Hackathon event. We will review your application 
+            and get back to you with further information.</p>
+        """;
+        };
     }
 
 }

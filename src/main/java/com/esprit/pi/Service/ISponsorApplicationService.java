@@ -11,4 +11,5 @@ public interface ISponsorApplicationService {
     SponsorApplication approveApplication(int id);
     SponsorApplication rejectApplication(int id);
     void deleteApplication(int id);
+    void autoRejectExpiredApplications();
 }

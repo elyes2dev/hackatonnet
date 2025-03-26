@@ -27,6 +27,9 @@ public class PrizeService implements IPrizeService{
     SponsorRewardService sponsorRewardService;
     @Autowired
     ISponsorApplicationRepository sponsorApplicationRepository;
+    @Autowired
+    private ProductPriceService productPriceService;
+
 
     public Prize createPrize(long sponsorId, long hackathonId, Prize prize) {
         User sponsor = userRepository.findById(sponsorId)
@@ -69,10 +72,19 @@ public class PrizeService implements IPrizeService{
     }
 
     public int calculatePoints(Prize prize) {
-        return (prize.getPrizeType() == Prize.PrizeType.MONEY)
-                ? (int) prize.getAmount().doubleValue() / 100
-                : 10; // Default for PRODUCT
+        if (prize.getPrizeType() == Prize.PrizeType.MONEY) {
+            return (int) prize.getAmount().doubleValue() / 100; // Calculate from money
+        } else if (prize.getPrizeType() == Prize.PrizeType.PRODUCT) {
+            // Fetch price from Google Custom Search API
+            Double fetchedPrice = productPriceService.fetchProductPrice(prize.getProductName());
+            if (fetchedPrice != null) {
+                return (int) (fetchedPrice / 1); // Directly calculate points without a minimum
+            }
+        }
+        return 50; // Default points if no price is found
     }
+
+
 
 
     public List<Prize> getAllPrizes() {

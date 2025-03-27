@@ -81,7 +81,7 @@ public class PrizeService implements IPrizeService{
                 return (int) (fetchedPrice / 1); // Directly calculate points without a minimum
             }
         }
-        return 50; // Default points if no price is found
+        return 10; // Default points if no price is found
     }
 
 
@@ -101,6 +101,30 @@ public class PrizeService implements IPrizeService{
         return prizeRepository.findByHackathonId(hackathonId);
     }
 
+    public List<Prize> getPrizesBySponsor(Long sponsorId) {
+        User sponsor = userRepository.findById(sponsorId)
+                .orElseThrow(() -> new RuntimeException("Sponsor not found"));
+        return prizeRepository.findBySponsor(sponsor);
+    }
+
+    public List<Prize> getPrizesByCategory(Prize.PrizeCategory category) {
+        return prizeRepository.findByPrizeCategory(category);
+    }
+
+    public List<Prize> getPrizesBySponsorAndCategory(Long sponsorId, Prize.PrizeCategory category) {
+        User sponsor = userRepository.findById(sponsorId)
+                .orElseThrow(() -> new RuntimeException("Sponsor not found"));
+        return prizeRepository.findBySponsorAndPrizeCategory(sponsor, category);
+    }
+
+    public List<Prize> getPrizesByHackathonAndCategory(Long hackathonId, Prize.PrizeCategory category) {
+        Hackathon hackathon = hackathonRepository.findById(hackathonId)
+                .orElseThrow(() -> new RuntimeException("Hackathon not found"));
+        return prizeRepository.findByHackathonAndPrizeCategory(hackathon, category);
+    }
+
+
+
     public Prize approvePrize(long id) {
         Prize prize = getPrizeById(id);
         prize.setStatus(ApplicationStatus.APPROVED);
@@ -118,6 +142,27 @@ public class PrizeService implements IPrizeService{
         Prize prize = getPrizeById(id);
         prize.setStatus(ApplicationStatus.REJECTED);
         prize.setReviewedAt(LocalDateTime.now());
+        return prizeRepository.save(prize);
+    }
+
+    public Prize cancelPrize(long prizeId, long sponsorId) {
+        Prize prize = getPrizeById(prizeId);
+
+        // Ensure only the sponsor who created the prize can cancel it
+        if (prize.getSponsor().getId() != sponsorId) {
+            throw new RuntimeException("Unauthorized: You can only cancel your own prizes.");
+        }
+
+        // If the prize is already approved, deduct points and adjust badge if necessary
+        if (prize.getStatus() == ApplicationStatus.APPROVED) {
+            int points = calculatePoints(prize);
+            sponsorRewardService.deductPoints(sponsorId, points);
+        }
+
+        // Mark the prize as CANCELED
+        prize.setStatus(ApplicationStatus.CANCELED);
+        prize.setReviewedAt(LocalDateTime.now());
+
         return prizeRepository.save(prize);
     }
 
@@ -155,8 +200,9 @@ public class PrizeService implements IPrizeService{
 
 
     public long countSponsorPrizesInHackathon(Long sponsorId, Long hackathonId) {
-        return prizeRepository.countBySponsorIdAndHackathonId(sponsorId, hackathonId);
+        return prizeRepository.countBySponsorIdAndHackathonIdAndStatus(sponsorId, hackathonId, ApplicationStatus.APPROVED);
     }
+
 
     // Get max allowed prizes by badge
     public int getPrizeLimitByBadge(SponsorReward.SponsorBadge badge) {
@@ -177,6 +223,7 @@ public class PrizeService implements IPrizeService{
             throw new RuntimeException("You have reached the maximum prize limit for your badge level.");
         }
     }
+
 
 
 }

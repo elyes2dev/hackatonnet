@@ -52,9 +52,19 @@ public class SponsorRewardService implements ISponsorRewardService{
     }
 
     @Override
-    // Deduct points (if a prize is withdrawn)
     public void deductPoints(Long sponsorId, int points) {
-        addPoints(sponsorId, -points);
+        SponsorReward reward = sponsorRewardRepository.findBySponsorId(sponsorId)
+                .orElseThrow(() -> new RuntimeException("Reward record not found"));
+
+        reward.setReputationPoints(Math.max(0, reward.getReputationPoints() - points));
+
+        // Check if badge needs to be downgraded
+        SponsorReward.SponsorBadge newBadge = reward.calculateBadge();
+        if (!reward.getBadge().equals(newBadge)) {
+            reward.setBadge(newBadge);
+        }
+
+        sponsorRewardRepository.save(reward);
     }
 
     @Override

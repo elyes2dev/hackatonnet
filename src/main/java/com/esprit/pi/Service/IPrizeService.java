@@ -17,9 +17,14 @@ public interface IPrizeService {
     List<Prize> getPrizesByHackathon(long hackathonId);
     Prize approvePrize(long id);
     Prize rejectPrize(long id);
+    Prize cancelPrize(long prizeId, long sponsorId);
     void deletePrize(long id);
     List<SponsorInfoDTO> getSponsorsByHackathon(Long hackathonId);
     long countSponsorPrizesInHackathon(Long sponsorId, Long hackathonId);
     int getPrizeLimitByBadge(SponsorReward.SponsorBadge badge);
     void checkPrizeLimit(User sponsor, Hackathon hackathon);
+    List<Prize> getPrizesBySponsor(Long sponsorId);
+    List<Prize> getPrizesByCategory(Prize.PrizeCategory category);
+    List<Prize> getPrizesBySponsorAndCategory(Long sponsorId, Prize.PrizeCategory category);
+    List<Prize> getPrizesByHackathonAndCategory(Long hackathonId, Prize.PrizeCategory category);
 }

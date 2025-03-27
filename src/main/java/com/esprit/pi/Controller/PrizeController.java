@@ -54,6 +54,26 @@ public class PrizeController {
         return ResponseEntity.ok(prizes);
     }
 
+    @GetMapping("/getprizebysponsor/{sponsorId}")
+    public List<Prize> getPrizesBySponsor(@PathVariable Long sponsorId) {
+        return prizeService.getPrizesBySponsor(sponsorId);
+    }
+
+    @GetMapping("/getprizebycategory/{category}")
+    public List<Prize> getPrizesByCategory(@PathVariable Prize.PrizeCategory category) {
+        return prizeService.getPrizesByCategory(category);
+    }
+
+    @GetMapping("/sponsor/{sponsorId}/category/{category}")
+    public List<Prize> getPrizesBySponsorAndCategory(@PathVariable Long sponsorId, @PathVariable Prize.PrizeCategory category) {
+        return prizeService.getPrizesBySponsorAndCategory(sponsorId, category);
+    }
+
+    @GetMapping("/hackathon/{hackathonId}/category/{category}")
+    public List<Prize> getPrizesByHackathonAndCategory(@PathVariable Long hackathonId, @PathVariable Prize.PrizeCategory category) {
+        return prizeService.getPrizesByHackathonAndCategory(hackathonId, category);
+    }
+
     @PutMapping("/{id}/approve")
     public ResponseEntity<?> approvePrize(@PathVariable long id) {
         try {
@@ -73,6 +93,13 @@ public class PrizeController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PutMapping("/{prizeId}/cancel/{sponsorId}")
+    public ResponseEntity<Prize> cancelPrize(@PathVariable long prizeId, @PathVariable long sponsorId) {
+        Prize canceledPrize = prizeService.cancelPrize(prizeId, sponsorId);
+        return ResponseEntity.ok(canceledPrize);
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePrize(@PathVariable long id) {

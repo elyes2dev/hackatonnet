@@ -215,7 +215,7 @@ public class SponsorApplicationService implements ISponsorApplicationService{
                         <p>Best regards,<br>
                         The Hackathon Sponsorship Team</p>
 
-                        <p>Questions? Contact us at <a href="mortadhabennaceur390@gmail.com">sponsors@hackathon.com</a></p>
+                        <p>Questions? Contact us at <a href="mortadhabennaceur390@gmail.com">mortadhabennaceur390@gmail.com</a></p>
                     </div>
                 </div>
 

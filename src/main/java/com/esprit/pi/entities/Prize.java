@@ -42,7 +42,15 @@ public class Prize {
     private LocalDateTime submittedAt = LocalDateTime.now();
     private LocalDateTime reviewedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PrizeCategory prizeCategory; // New field for categorization
+
     public enum PrizeType {
         MONEY, PRODUCT
+    }
+
+    public enum PrizeCategory {
+        BEST_INNOVATION, BEST_DESIGN, BEST_AI_PROJECT
     }
 }

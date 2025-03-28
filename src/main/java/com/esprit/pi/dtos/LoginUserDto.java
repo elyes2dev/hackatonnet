@@ -3,7 +3,6 @@ package com.esprit.pi.dtos;
 import com.esprit.pi.repositories.UserRepository;
 
 public class LoginUserDto {
-    UserRepository repo;
 
     private String email;
 

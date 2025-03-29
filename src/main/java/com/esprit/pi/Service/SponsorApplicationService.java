@@ -29,9 +29,11 @@ public class SponsorApplicationService implements ISponsorApplicationService{
     SponsorRewardService sponsorRewardService;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    SponsorNotificationService sponsorNotificationService;
 
 
-    static final int EXPIRATION_MINUTES = 5; // 2 minutes for testing
+    static final int EXPIRATION_MINUTES = 5; // 5 minutes for testing
 
 
     public SponsorApplication submitApplication(long userId, SponsorApplication application) {
@@ -116,6 +118,33 @@ public class SponsorApplicationService implements ISponsorApplicationService{
 
             sponsorApplicationRepository.saveAll(expiredApplications);
             System.out.println("Auto-rejected " + expiredApplications.size() + " expired applications.");
+        }
+    }
+
+    // Check for pending applications every 2 minutes
+    @Scheduled(cron = "0 * * * * ?") // Run every minute for testing
+    public void notifyAdminsForPendingApplications() {
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(2);
+
+        List<SponsorApplication> pendingApplications = sponsorApplicationRepository
+                .findByStatusAndSubmittedAtBeforeAndNotifiedFalse(ApplicationStatus.PENDING, threshold);
+
+        if (!pendingApplications.isEmpty()) {
+            pendingApplications.forEach(application -> {
+                // Include company name in the notification message
+                String message = String.format(
+                        "Pending application from %s (Company: %s)",
+                        application.getUser().getName(),
+                        application.getCompanyName()
+                );
+
+                // Send notification
+                sponsorNotificationService.createGlobalNotification(message);
+
+                // Mark as notified
+                application.setNotified(true);
+                sponsorApplicationRepository.save(application);
+            });
         }
     }
 

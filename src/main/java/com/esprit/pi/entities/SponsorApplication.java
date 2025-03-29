@@ -31,7 +31,9 @@ public class SponsorApplication {
     @Column(nullable = false, unique = true)
     private int registrationNumber; // Business registration number
 
-    private String websiteUrl; // Optional
+    private String websiteUrl;
+
+    private boolean notified = false;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

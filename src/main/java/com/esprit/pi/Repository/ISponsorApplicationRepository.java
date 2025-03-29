@@ -13,5 +13,7 @@ import java.util.Optional;
 public interface ISponsorApplicationRepository extends JpaRepository<SponsorApplication,Integer> {
     Optional<SponsorApplication> findByUserId(long userId);
     List<SponsorApplication> findByStatusAndSubmittedAtBefore(ApplicationStatus status, LocalDateTime dateTime);
+    List<SponsorApplication> findByStatusAndSubmittedAtBeforeAndNotifiedFalse(ApplicationStatus status, LocalDateTime time);
+
 
 }

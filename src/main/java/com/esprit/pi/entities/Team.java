@@ -32,7 +32,10 @@ public class Team {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;  // Timestamp of when the team was created
 
+    // Getter and Setter for hackathon
     // Relationship with Hackathon (Each team is associated with one hackathon)
+    @Setter
+    @Getter
     @ManyToOne
     @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathon hackathon;  // The hackathon this team belongs to
@@ -41,4 +44,5 @@ public class Team {
     // One-to-many relationship with TeamMembers (Each team has multiple members)
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamMembers> teamMembers;
+
 }

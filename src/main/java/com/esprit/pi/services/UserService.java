@@ -41,13 +41,10 @@ public class UserService implements IUserService {
         }).orElse(null);
     }
 
-
     @Override
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+
     }
 
-    public Optional<User> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
+
 }

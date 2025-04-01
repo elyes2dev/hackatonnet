@@ -1,65 +1,85 @@
 package com.esprit.pi.configs;
 
+import com.esprit.pi.repositories.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
-    private final AuthenticationProvider authenticationProvider;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfiguration(
-            JwtAuthenticationFilter jwtAuthenticationFilter,
-            AuthenticationProvider authenticationProvider
-    ) {
-        this.authenticationProvider = authenticationProvider;
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    JwtFilter jwtFilter;
+    UserRepository userRepository;
+
+    public SecurityConfiguration(JwtFilter jwtFilter, UserRepository userRepository) {
+        // Auto inject dependent beans
+        this.jwtFilter = jwtFilter;
+        this.userRepository = userRepository;
     }
 
+    // Security Filter Chain for API
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf()
-                .disable()
-                .cors().and()
-                .authorizeHttpRequests()
-                .requestMatchers("/auth/signup", "/auth/login")
-                .permitAll()
-                .anyRequest()
-                .authenticated()
-                .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+    @Order(1)
+    public SecurityFilterChain basicAuthSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher("/api/**", "/auth/**")
+                .csrf(csrf -> csrf.disable())  // Disable CSRF protection
+                .authorizeHttpRequests(request -> {
+                    request.requestMatchers("/api/open/**", "/auth/**").permitAll();  // Allow public access
+                    request.anyRequest().authenticated();  // Require JWT authentication for other endpoints
+                })
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
+
+
+    // Security Filter Chain for Web Pages
     @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+    @Order(2)
+    public SecurityFilterChain formSecurityFilterChain(HttpSecurity http) throws Exception {
+        // Form Login for Web Pages
+        return http.authorizeHttpRequests(request -> {
+                    request.requestMatchers("/").permitAll();
+                    request.requestMatchers("/error").permitAll();
+                    request.requestMatchers("/open").permitAll();
+                    request.anyRequest().authenticated();
+                })
+                .formLogin((formLoginConfig) -> formLoginConfig.defaultSuccessUrl("/protected", true))
+                .logout(logoutConfig -> logoutConfig.logoutSuccessUrl("/"))
+                .build();
+    }
 
-        configuration.setAllowedOrigins(List.of("http://localhost:9100"));
-        configuration.setAllowedMethods(List.of("GET","POST"));
-        configuration.setAllowedHeaders(List.of("Authorization","Content-Type"));
+    // Ignore selected URIs from security checks
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        // Ignore static directories from Security Filter Chain
+        return web -> web.ignoring().requestMatchers("/images/**", "/js/**");
+    }
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    // Custom User Details Service to manage login
+    @Bean
+    public UserDetailsService userDetailsService() {
+        UserDetailsService userDetailsService = (userName) -> {
+            return userRepository.findByName(userName);
+        };
+        return userDetailsService;
+    }
 
-        source.registerCorsConfiguration("/**",configuration);
-
-        return source;
+    // Password encoder
+    @Bean
+    public PasswordEncoder getPasswordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
     }
 }

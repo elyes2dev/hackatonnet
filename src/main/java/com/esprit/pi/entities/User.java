@@ -10,10 +10,7 @@ import org.hibernate.jdbc.Work;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
@@ -28,8 +25,14 @@ public class User implements UserDetails {
 
     private String name;
     private String lastname;
+    @Getter
+    @Setter
     private String email;
+    @Getter
+    @Setter
     private String username;
+    @Getter
+    @Setter
     private String password;
 
     @Temporal(TemporalType.DATE)
@@ -42,6 +45,8 @@ public class User implements UserDetails {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
+    @Getter
+    @Setter
     @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "user_roles",
@@ -59,7 +64,7 @@ public class User implements UserDetails {
     private Set<Skill> skills;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Workshop> workshops;
+    private List<Workshop> workshops = new ArrayList<>(); // Fixed initialization
 
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -80,11 +85,6 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MonitorEvaluation> evaluations;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
-    }
-
     public enum BadgeLevel {
         JUNIOR_COACH,
         ASSISTANT_COACH,
@@ -93,5 +93,10 @@ public class User implements UserDetails {
         MASTER_MENTOR
     }
 
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
 
 }

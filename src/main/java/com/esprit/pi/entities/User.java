@@ -70,6 +70,9 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamMembers> teamMembers;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserQuizScore> userQuizScores;  // List of quiz scores for the user
+
     private int monitorPoints = 0;
 
     @Enumerated(EnumType.STRING)
@@ -77,6 +80,7 @@ public class User {
 
     @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MonitorEvaluation> evaluations;
+
 
     public enum BadgeLevel {
         JUNIOR_COACH,
@@ -117,5 +121,21 @@ public class User {
 
     public String getPassword() {
         return password;
+    }
+
+    public List<Workshop> getWorkshops() {
+        return workshops;
+    }
+
+    public void setWorkshops(List<Workshop> workshops) {
+        this.workshops = workshops;
+    }
+
+    public List<UserQuizScore> getUserQuizScores() {
+        return userQuizScores;
+    }
+
+    public void setUserQuizScores(List<UserQuizScore> userQuizScores) {
+        this.userQuizScores = userQuizScores;
     }
 }

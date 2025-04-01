@@ -18,7 +18,7 @@ public class ResourcesController {
     private IResourcesService resourcesService;
 
     // Create or update a resource
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<Resources> createOrUpdateResource(@RequestBody Resources resources) {
         Resources savedResource = resourcesService.save(resources);
         return new ResponseEntity<>(savedResource, HttpStatus.CREATED);

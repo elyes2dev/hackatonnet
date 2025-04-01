@@ -1,6 +1,8 @@
 package com.esprit.pi.services;
 
+import com.esprit.pi.entities.PasswordResetToken;
 import com.esprit.pi.entities.User;
+import com.esprit.pi.repositories.PasswordResetTokenRepository;
 import com.esprit.pi.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,9 @@ public class UserService implements IUserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordResetTokenRepository passwordTokenRepository;
 
     @Override
     public List<User> getAllUsers() {
@@ -47,4 +52,24 @@ public class UserService implements IUserService {
     }
 
 
+    public User findUserByEmail(String email) {
+        String cleanedEmail = email.trim().replaceAll("[\\r\\n]+", "");
+        System.out.println("Looking for email: " + cleanedEmail);
+
+        User user = userRepository.findByEmail(cleanedEmail.toLowerCase());
+
+        if (user == null) {
+            System.out.println("User with email " + cleanedEmail + " not found!");
+        } else {
+            System.out.println("User found: " + user.getEmail());
+        }
+        return user;
+    }
+
+
+
+    public void createPasswordResetTokenForUser(User user, String token) {
+        PasswordResetToken myToken = new PasswordResetToken(token, user);
+        passwordTokenRepository.save(myToken);
+    }
 }

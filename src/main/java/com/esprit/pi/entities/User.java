@@ -1,5 +1,7 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -62,6 +64,7 @@ public class User {
     private List<Hackathon> hackathons;  // This adds the relationship to Hackathons
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference // Manages forward serialization
     private SponsorApplication sponsorApplication; // One-to-One Relationship
 
     @OneToOne(mappedBy = "sponsor", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -1,5 +1,6 @@
 package com.esprit.pi.Service;
 
+import com.esprit.pi.DTO.PrizeDTO;
 import com.esprit.pi.DTO.SponsorInfoDTO;
 import com.esprit.pi.entities.Hackathon;
 import com.esprit.pi.entities.Prize;
@@ -14,6 +15,7 @@ public interface IPrizeService {
     int calculatePoints(Prize prize);
     List<Prize> getAllPrizes();
     Prize getPrizeById(long id);
+    PrizeDTO getPrizeByIdDTO(long id);
     List<Prize> getPrizesByHackathon(long hackathonId);
     Prize approvePrize(long id);
     Prize rejectPrize(long id);

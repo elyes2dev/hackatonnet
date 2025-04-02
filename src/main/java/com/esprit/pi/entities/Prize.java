@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,9 +20,11 @@ public class Prize {
     private long id;
 
     @ManyToOne(cascade = CascadeType.ALL)
+    @JsonIgnore // Prevent serialization of the full User object
     private User sponsor; // The sponsor giving the prize
 
     @ManyToOne(cascade = CascadeType.ALL)
+    @JsonIgnore // Prevent serialization of the full User object
     private Hackathon hackathon; // The hackathon receiving the prize
 
     @Enumerated(EnumType.STRING)

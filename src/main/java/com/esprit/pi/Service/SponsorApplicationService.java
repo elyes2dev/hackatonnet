@@ -1,5 +1,7 @@
 package com.esprit.pi.Service;
 
+import com.esprit.pi.DTO.SponsorApplicationDTO;
+import com.esprit.pi.DTO.UserDTO;
 import com.esprit.pi.Repository.IRoleRepository;
 import com.esprit.pi.Repository.ISponsorApplicationRepository;
 import com.esprit.pi.Repository.IUserRepository;
@@ -57,6 +59,28 @@ public class SponsorApplicationService implements ISponsorApplicationService{
     public SponsorApplication getApplicationById(int id) {
         return sponsorApplicationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Application not found"));
+    }
+
+    public SponsorApplicationDTO getApplicationByIdDTO(int id) {
+        SponsorApplication application = sponsorApplicationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+
+        User user = application.getUser();
+
+        UserDTO userDTO = new UserDTO(user.getId(), user.getName(),user.getLastname(), user.getEmail());
+
+        return new SponsorApplicationDTO(
+                application.getId(),
+                application.getCompanyName(),
+                application.getCompanyLogo(),
+                application.getDocumentPath(),
+                application.getRegistrationNumber(),
+                application.getWebsiteUrl(),
+                application.getStatus(),
+                application.getSubmittedAt(),
+                application.getReviewedAt(),
+                userDTO // Use UserDTO instead of separate fields
+        );
     }
 
     public SponsorApplication approveApplication(int id) {

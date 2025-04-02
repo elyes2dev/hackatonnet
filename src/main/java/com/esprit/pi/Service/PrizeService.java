@@ -1,6 +1,9 @@
 package com.esprit.pi.Service;
 
+import com.esprit.pi.DTO.HackathonDTO;
+import com.esprit.pi.DTO.PrizeDTO;
 import com.esprit.pi.DTO.SponsorInfoDTO;
+import com.esprit.pi.DTO.UserDTO;
 import com.esprit.pi.Repository.*;
 import com.esprit.pi.entities.*;
 import lombok.AllArgsConstructor;
@@ -96,6 +99,42 @@ public class PrizeService implements IPrizeService{
         return prizeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Prize not found"));
     }
+
+    public PrizeDTO getPrizeByIdDTO(long id) {
+        Prize prize = prizeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Prize not found"));
+
+        // Convert to PrizeDTO
+        PrizeDTO prizeDTO = new PrizeDTO();
+        prizeDTO.setId(prize.getId());
+        prizeDTO.setPrizeType(prize.getPrizeType());
+        prizeDTO.setAmount(prize.getAmount());
+        prizeDTO.setProductName(prize.getProductName());
+        prizeDTO.setProductDescription(prize.getProductDescription());
+        prizeDTO.setStatus(prize.getStatus());
+        prizeDTO.setSubmittedAt(prize.getSubmittedAt());
+        prizeDTO.setReviewedAt(prize.getReviewedAt());
+        prizeDTO.setPrizeCategory(prize.getPrizeCategory());
+
+        // Convert and set UserDTO
+        UserDTO sponsorDTO = new UserDTO();
+        sponsorDTO.setId(prize.getSponsor().getId());
+        sponsorDTO.setName(prize.getSponsor().getName());
+        sponsorDTO.setLastname(prize.getSponsor().getLastname());
+        sponsorDTO.setEmail(prize.getSponsor().getEmail());
+        prizeDTO.setSponsor(sponsorDTO);
+
+        // Convert and set HackathonDTO
+        HackathonDTO hackathonDTO = new HackathonDTO();
+        hackathonDTO.setId(prize.getHackathon().getId());
+        hackathonDTO.setTitle(prize.getHackathon().getTitle());
+        hackathonDTO.setStartDate(prize.getHackathon().getStartDate());
+        hackathonDTO.setEndDate(prize.getHackathon().getEndDate());
+        prizeDTO.setHackathon(hackathonDTO);
+
+        return prizeDTO;
+    }
+
 
     public List<Prize> getPrizesByHackathon(long hackathonId) {
         return prizeRepository.findByHackathonId(hackathonId);

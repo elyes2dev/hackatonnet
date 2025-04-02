@@ -1,6 +1,7 @@
 package com.esprit.pi.Controller;
 
 
+import com.esprit.pi.DTO.SponsorApplicationDTO;
 import com.esprit.pi.Service.ISponsorApplicationService;
 import com.esprit.pi.entities.SponsorApplication;
 import lombok.AllArgsConstructor;
@@ -35,12 +36,9 @@ public class SponsorApplicationController {
     }
 
     @GetMapping("/getapplicationbyid/{id}")
-    public ResponseEntity<?> getApplicationById(@PathVariable int id) {
-        try {
-            return ResponseEntity.ok(sponsorApplicationService.getApplicationById(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<SponsorApplicationDTO> getApplicationById(@PathVariable int id) {
+        SponsorApplicationDTO dto = sponsorApplicationService.getApplicationByIdDTO(id);
+        return ResponseEntity.ok(dto);
     }
 
     @PutMapping("/{id}/approve")

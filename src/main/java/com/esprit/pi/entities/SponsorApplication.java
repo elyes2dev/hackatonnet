@@ -1,6 +1,6 @@
 package com.esprit.pi.entities;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,6 +20,7 @@ public class SponsorApplication {
     private int id;
 
     @OneToOne(cascade = CascadeType.ALL)
+    @JsonBackReference // Prevents infinite recursion
     private User user; // The user who applied
 
     private String companyName;

@@ -39,11 +39,12 @@ public class PrizeController {
     @GetMapping("/getprizebyid/{id}")
     public ResponseEntity<?> getPrizeById(@PathVariable long id) {
         try {
-            return ResponseEntity.ok(prizeService.getPrizeById(id));
+            return ResponseEntity.ok(prizeService.getPrizeByIdDTO(id));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
 
     @GetMapping("/getprizebyhackathon/{hackathonId}")
     public ResponseEntity<?> getPrizesByHackathon(@PathVariable long hackathonId) {

@@ -1,5 +1,6 @@
 package com.esprit.pi.controllers;
 
+import com.esprit.pi.dtos.PasswordDto;
 import com.esprit.pi.entities.User;
 import com.esprit.pi.repositories.UserRepository;
 import com.esprit.pi.services.EmailService;
@@ -7,13 +8,12 @@ import com.esprit.pi.services.JwtUtility;
 import com.esprit.pi.services.UserService;
 import com.esprit.pi.services.VerificationService;
 import com.esprit.pi.utilitys.VerificationCodeGenerator;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.*;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+
+import java.util.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -68,11 +68,11 @@ public class AuthController {
         User user = userService.findUserByEmail(email);
 
 
-       /* if (user == null) {
+        if (user == null) {
             Map<String, String> response = new HashMap<>();
             response.put("message", "User not Found!");
             return response;
-        }*/
+        }
 
         String sendTo = email.trim();
         String token = UUID.randomUUID().toString();
@@ -86,17 +86,45 @@ public class AuthController {
     }
 
     @GetMapping("/changePassword")
-    public Map<String, String>  showChangePasswordPage(
-                                         @RequestParam("token") String token) {
+    public Map<String, String>  showChangePasswordPage(@RequestParam("token") String token) {
         String result = verificationService.validatePasswordResetToken(token);
+        System.out.println(result);
         if(result != null) {
             Map<String, String> response = new HashMap<>();
+            response.put("message", "oops!Somethin went wrong");
+            return response;
+
+        } else {
+
+            Map<String, String> response = new HashMap<>();
             response.put("message", "Password Will be resetted!");
+            return response;
+        }
+    }
+
+    @PostMapping("/savePassword")
+    public Map<String, String> savePassword(@Valid @RequestBody PasswordDto passwordDto) {
+        if (passwordDto.getToken() == null) {
+            throw new IllegalArgumentException("Token cannot be null");
+        }
+        String result = verificationService.validatePasswordResetToken(passwordDto.getToken());
+
+        if(result != null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message" , "Not Found!");
+            return response;
+        }
+
+        User user = userService.getUserByPasswordResetToken(passwordDto.getToken());
+        if(user != null) {
+            userService.changeUserPassword(user, passwordDto.getNewPassword());
+            Map<String, String> response = new HashMap<>();
+            response.put("message" , "Succes!");
             return response;
 
         } else {
             Map<String, String> response = new HashMap<>();
-            response.put("message", "oops!Somethin went wrong");
+            response.put("message" , "Fail!");
             return response;
         }
     }

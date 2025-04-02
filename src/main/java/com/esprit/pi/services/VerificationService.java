@@ -29,11 +29,11 @@ public class VerificationService {
     }
 
     public String validatePasswordResetToken(String token) {
-        final PasswordResetToken passToken = passwordTokenRepository.findByToken(token);
+        String cleanedToken = token.trim().replaceAll("[\\r\\n]+", "");
+        final PasswordResetToken passToken = passwordTokenRepository.findByToken(cleanedToken);
+        System.out.println("the output is " + passToken.getToken());
 
-        return !isTokenFound(passToken) ? "invalidToken"
-                : isTokenExpired(passToken) ? "expired"
-                : null;
+        return !isTokenFound(passToken) ? "invalidToken" : isTokenExpired(passToken) ? "expired" : null;
     }
 
     private boolean isTokenFound(PasswordResetToken passToken) {

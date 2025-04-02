@@ -5,6 +5,8 @@ import com.esprit.pi.entities.User;
 import com.esprit.pi.repositories.PasswordResetTokenRepository;
 import com.esprit.pi.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +20,10 @@ public class UserService implements IUserService {
 
     @Autowired
     private PasswordResetTokenRepository passwordTokenRepository;
+
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Override
     public List<User> getAllUsers() {
@@ -51,6 +57,11 @@ public class UserService implements IUserService {
 
     }
 
+    public void changeUserPassword(User user, String password) {
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+    }
+
 
     public User findUserByEmail(String email) {
         String cleanedEmail = email.trim().replaceAll("[\\r\\n]+", "");
@@ -71,5 +82,10 @@ public class UserService implements IUserService {
     public void createPasswordResetTokenForUser(User user, String token) {
         PasswordResetToken myToken = new PasswordResetToken(token, user);
         passwordTokenRepository.save(myToken);
+    }
+
+    public User getUserByPasswordResetToken(String token) {
+        PasswordResetToken tokenObj = passwordResetTokenRepository.findByToken(token);
+        return userRepository.findById(tokenObj.getUser().getId()).orElse(null);
     }
 }

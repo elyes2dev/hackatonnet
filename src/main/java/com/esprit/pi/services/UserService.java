@@ -57,9 +57,11 @@ public class UserService implements IUserService {
 
     }
 
-    public void changeUserPassword(User user, String password) {
+    public void changeUserPassword(User user, String password, String token) {
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
+        PasswordResetToken deletedToken = passwordTokenRepository.findByToken(token);
+        passwordTokenRepository.delete(deletedToken);
     }
 
 

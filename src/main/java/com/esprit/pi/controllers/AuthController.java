@@ -1,7 +1,9 @@
 package com.esprit.pi.controllers;
 
 import com.esprit.pi.dtos.PasswordDto;
+import com.esprit.pi.entities.PasswordResetToken;
 import com.esprit.pi.entities.User;
+import com.esprit.pi.repositories.PasswordResetTokenRepository;
 import com.esprit.pi.repositories.UserRepository;
 import com.esprit.pi.services.EmailService;
 import com.esprit.pi.services.JwtUtility;
@@ -109,15 +111,15 @@ public class AuthController {
         }
         String result = verificationService.validatePasswordResetToken(passwordDto.getToken());
 
-        if(result != null) {
+        if(Objects.equals(result, "expired")) {
             Map<String, String> response = new HashMap<>();
-            response.put("message" , "Not Found!");
+            response.put("message" , "Expired!");
             return response;
         }
 
         User user = userService.getUserByPasswordResetToken(passwordDto.getToken());
         if(user != null) {
-            userService.changeUserPassword(user, passwordDto.getNewPassword());
+            userService.changeUserPassword(user, passwordDto.getNewPassword(),passwordDto.getToken());
             Map<String, String> response = new HashMap<>();
             response.put("message" , "Succes!");
             return response;

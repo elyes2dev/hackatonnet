@@ -76,6 +76,9 @@ public class User implements UserDetails {
     // Many-to-many relationship with Team through TeamMembers
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamMembers> teamMembers;
+  
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserQuizScore> userQuizScores;  // List of quiz scores for the user
 
     private int monitorPoints = 0;
 
@@ -98,5 +101,19 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
     }
+  
+      public List<UserQuizScore> getUserQuizScores() {
+        return userQuizScores;
+    }
 
-}
+    public void setUserQuizScores(List<UserQuizScore> userQuizScores) {
+        this.userQuizScores = userQuizScores;
+    }
+  
+    public List<Workshop> getWorkshops() {
+        return workshops;
+    }
+
+    public void setWorkshops(List<Workshop> workshops) {
+        this.workshops = workshops;
+    }

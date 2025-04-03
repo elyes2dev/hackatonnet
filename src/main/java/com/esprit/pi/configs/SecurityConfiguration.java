@@ -32,6 +32,8 @@ public class SecurityConfiguration {
     @Order(1)
     public SecurityFilterChain basicAuthSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
+                .cors()
+                .and()
                 .securityMatcher("/api/**", "/auth/**")
                 .csrf(csrf -> csrf.disable())  // Disable CSRF protection
                 .authorizeHttpRequests(request -> {

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -145,6 +146,45 @@ public class PrizeService implements IPrizeService{
                 .orElseThrow(() -> new RuntimeException("Sponsor not found"));
         return prizeRepository.findBySponsor(sponsor);
     }
+
+    public List<PrizeDTO> getPrizesBySponsorDTO(Long sponsorId) {
+        User sponsor = userRepository.findById(sponsorId)
+                .orElseThrow(() -> new RuntimeException("Sponsor not found"));
+
+        List<Prize> prizes = prizeRepository.findBySponsor(sponsor);
+
+        return prizes.stream().map(prize -> {
+            PrizeDTO prizeDTO = new PrizeDTO();
+            prizeDTO.setId(prize.getId());
+            prizeDTO.setPrizeType(prize.getPrizeType());
+            prizeDTO.setAmount(prize.getAmount());
+            prizeDTO.setProductName(prize.getProductName());
+            prizeDTO.setProductDescription(prize.getProductDescription());
+            prizeDTO.setStatus(prize.getStatus());
+            prizeDTO.setSubmittedAt(prize.getSubmittedAt());
+            prizeDTO.setReviewedAt(prize.getReviewedAt());
+            prizeDTO.setPrizeCategory(prize.getPrizeCategory());
+
+            // Convert and set UserDTO
+            UserDTO sponsorDTO = new UserDTO();
+            sponsorDTO.setId(prize.getSponsor().getId());
+            sponsorDTO.setName(prize.getSponsor().getName());
+            sponsorDTO.setLastname(prize.getSponsor().getLastname());
+            sponsorDTO.setEmail(prize.getSponsor().getEmail());
+            prizeDTO.setSponsor(sponsorDTO);
+
+            // Convert and set HackathonDTO
+            HackathonDTO hackathonDTO = new HackathonDTO();
+            hackathonDTO.setId(prize.getHackathon().getId());
+            hackathonDTO.setTitle(prize.getHackathon().getTitle());
+            hackathonDTO.setStartDate(prize.getHackathon().getStartDate());
+            hackathonDTO.setEndDate(prize.getHackathon().getEndDate());
+            prizeDTO.setHackathon(hackathonDTO);
+
+            return prizeDTO;
+        }).collect(Collectors.toList());
+    }
+
 
     public List<Prize> getPrizesByCategory(Prize.PrizeCategory category) {
         return prizeRepository.findByPrizeCategory(category);

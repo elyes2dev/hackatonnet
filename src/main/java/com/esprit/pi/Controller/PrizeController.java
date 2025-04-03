@@ -1,5 +1,6 @@
 package com.esprit.pi.Controller;
 
+import com.esprit.pi.DTO.PrizeDTO;
 import com.esprit.pi.DTO.SponsorInfoDTO;
 import com.esprit.pi.Service.IPrizeService;
 import com.esprit.pi.entities.Prize;
@@ -56,8 +57,8 @@ public class PrizeController {
     }
 
     @GetMapping("/getprizebysponsor/{sponsorId}")
-    public List<Prize> getPrizesBySponsor(@PathVariable Long sponsorId) {
-        return prizeService.getPrizesBySponsor(sponsorId);
+    public List<PrizeDTO> getPrizesBySponsor(@PathVariable Long sponsorId) {
+        return prizeService.getPrizesBySponsorDTO(sponsorId);
     }
 
     @GetMapping("/getprizebycategory/{category}")

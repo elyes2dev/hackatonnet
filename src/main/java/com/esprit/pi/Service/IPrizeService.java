@@ -26,6 +26,7 @@ public interface IPrizeService {
     int getPrizeLimitByBadge(SponsorReward.SponsorBadge badge);
     void checkPrizeLimit(User sponsor, Hackathon hackathon);
     List<Prize> getPrizesBySponsor(Long sponsorId);
+    List<PrizeDTO> getPrizesBySponsorDTO(Long sponsorId);
     List<Prize> getPrizesByCategory(Prize.PrizeCategory category);
     List<Prize> getPrizesBySponsorAndCategory(Long sponsorId, Prize.PrizeCategory category);
     List<Prize> getPrizesByHackathonAndCategory(Long hackathonId, Prize.PrizeCategory category);

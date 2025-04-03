@@ -103,4 +103,3 @@ public class Document {
 
         // Getters and setters
     }
-

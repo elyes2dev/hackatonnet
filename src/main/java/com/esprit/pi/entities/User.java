@@ -7,18 +7,17 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.jdbc.Work;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,8 +25,14 @@ public class User {
 
     private String name;
     private String lastname;
+    @Getter
+    @Setter
     private String email;
+    @Getter
+    @Setter
     private String username;
+    @Getter
+    @Setter
     private String password;
 
     @Temporal(TemporalType.DATE)
@@ -40,6 +45,8 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
+    @Getter
+    @Setter
     @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "user_roles",
@@ -69,7 +76,7 @@ public class User {
     // Many-to-many relationship with Team through TeamMembers
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamMembers> teamMembers;
-
+  
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserQuizScore> userQuizScores;  // List of quiz scores for the user
 
@@ -81,7 +88,6 @@ public class User {
     @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MonitorEvaluation> evaluations;
 
-
     public enum BadgeLevel {
         JUNIOR_COACH,
         ASSISTANT_COACH,
@@ -91,38 +97,19 @@ public class User {
     }
 
 
-    public String getUsername() {
-        return username;
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+  
+      public List<UserQuizScore> getUserQuizScores() {
+        return userQuizScores;
     }
 
-    public String getEmail() {
-        return email;
+    public void setUserQuizScores(List<UserQuizScore> userQuizScores) {
+        this.userQuizScores = userQuizScores;
     }
-
-    public Set<Role> getRoles() {
-        return roles;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
+  
     public List<Workshop> getWorkshops() {
         return workshops;
     }
@@ -130,12 +117,3 @@ public class User {
     public void setWorkshops(List<Workshop> workshops) {
         this.workshops = workshops;
     }
-
-    public List<UserQuizScore> getUserQuizScores() {
-        return userQuizScores;
-    }
-
-    public void setUserQuizScores(List<UserQuizScore> userQuizScores) {
-        this.userQuizScores = userQuizScores;
-    }
-}

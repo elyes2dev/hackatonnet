@@ -1,6 +1,9 @@
 package com.esprit.pi.controllers;
 
+import com.esprit.pi.dtos.ResourceRequest;
 import com.esprit.pi.entities.Resources;
+import com.esprit.pi.entities.Workshop;
+import com.esprit.pi.repositories.IWorkshopRepository;
 import com.esprit.pi.services.IResourcesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,12 +20,27 @@ public class ResourcesController {
     @Autowired
     private IResourcesService resourcesService;
 
+    @Autowired
+    private IWorkshopRepository workshopRepository; // Add this to access the
+
+    // Create or update a resource
     // Create or update a resource
     @PostMapping
-    public ResponseEntity<Resources> createOrUpdateResource(@RequestBody Resources resources) {
-        Resources savedResource = resourcesService.save(resources);
+    public ResponseEntity<Resources> createOrUpdateResource(@RequestBody ResourceRequest resourceRequest) {
+        Workshop workshop = workshopRepository.findById(resourceRequest.getWorkshopId())
+                .orElse(null);
+
+        // Get the Resource object from the request
+        Resources resource = resourceRequest.getResource();
+        // Set the Workshop entity on the Resource object
+        resource.setWorkshop(workshop);
+
+        // Save the resource
+        Resources savedResource = resourcesService.save(resource);
         return new ResponseEntity<>(savedResource, HttpStatus.CREATED);
     }
+
+
 
     // Get a resource by ID
     @GetMapping("/{id}")
@@ -48,3 +66,4 @@ public class ResourcesController {
         return ResponseEntity.notFound().build();
     }
 }
+

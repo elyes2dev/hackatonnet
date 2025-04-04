@@ -10,4 +10,5 @@ public interface IWorkshopService {
     public Optional<Workshop> findById(Long id);
     public List<Workshop> findAll();
     public void deleteById(Long id);
+    public Workshop updateWorkshop(Long id, Workshop updatedWorkshop);
 }

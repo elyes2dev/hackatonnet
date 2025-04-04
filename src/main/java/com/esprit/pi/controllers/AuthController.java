@@ -51,11 +51,9 @@ public class AuthController {
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody User loginUser) {
         User userOptional = userRepository.findByName(loginUser.getName());
-
-
+        System.out.println(loginUser.getName());
             Map<String, String> claims = new HashMap<>();
             claims.put("role", "USER");
-
             String token = jwtUtility.generateToken(claims, loginUser.getName(), 24 * 60 * 60 * 1000);
 
             Map<String, String> response = new HashMap<>();

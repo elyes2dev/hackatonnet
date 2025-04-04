@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,6 +33,7 @@ public class Resources {
     private String image;
     @ManyToOne
     @JoinColumn(name = "workshop_id", nullable = false)
+    @JsonBackReference
     private Workshop workshop;
 
  //   @OneToMany(mappedBy = "resource")

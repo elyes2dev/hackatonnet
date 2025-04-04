@@ -35,4 +35,15 @@ public class WorkshopServiceImpl implements IWorkshopService {
     public void deleteById(Long id) {
         workshopRepository.deleteById(id);
     }
+
+    @Override
+    public Workshop updateWorkshop(Long id, Workshop updatedWorkshop) {
+        return workshopRepository.findById(id).map(existingWorkshop -> {
+            existingWorkshop.setName(updatedWorkshop.getName());
+            existingWorkshop.setDescription(updatedWorkshop.getDescription());
+            existingWorkshop.setTheme(updatedWorkshop.getTheme());
+            existingWorkshop.setPhoto(updatedWorkshop.getPhoto());
+            return workshopRepository.save(existingWorkshop);
+        }).orElseThrow(() -> new RuntimeException("Workshop not found with id " + id));
+    }
 }

@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,6 +24,7 @@ public class Workshop {
 
     private String name;
     private String description;
+    @Column(length = 500000) // Store base64 image
     private String photo;
 
     @Enumerated(EnumType.STRING)
@@ -35,6 +37,7 @@ public class Workshop {
     @OneToOne(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
     private Quiz quiz;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Resources> resources = new ArrayList<>(); // Fixed name & initialization
 

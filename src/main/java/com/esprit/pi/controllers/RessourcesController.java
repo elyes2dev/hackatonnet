@@ -17,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/workshops/{workshopId}/resources")
+@RequestMapping("/workshops/{workshopId}/resources")
 public class RessourcesController {
     private final RessourcesServiceImpl ressourcesServiceImpl;
     private final FileStorageService fileStorageService;

@@ -34,10 +34,10 @@ public class SecurityConfiguration {
         return http
                 .cors()
                 .and()
-                .securityMatcher("/api/**", "/auth/**")
+                .securityMatcher("/api/**", "/auth/**","/**")
                 .csrf(csrf -> csrf.disable())  // Disable CSRF protection
                 .authorizeHttpRequests(request -> {
-                    request.requestMatchers("/api/open/**", "/auth/**").permitAll();  // Allow public access
+                    request.requestMatchers("/api/open/**", "/auth/**","/**").permitAll();  // Allow public access
                     request.anyRequest().authenticated();  // Require JWT authentication for other endpoints
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

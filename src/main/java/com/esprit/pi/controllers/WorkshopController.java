@@ -51,5 +51,15 @@ public class WorkshopController {
     public void deleteWorkshop(@PathVariable Long id) {
         workshopService.deleteById(id);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Workshop> updateWorkshop(@PathVariable Long id, @RequestBody Workshop workshop) {
+        try {
+            Workshop updated = workshopService.updateWorkshop(id, workshop);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build(); // If workshop not found
+        }
+    }
 }
 

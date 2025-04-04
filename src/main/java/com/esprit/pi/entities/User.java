@@ -7,17 +7,17 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.jdbc.Work;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +25,15 @@ public class User {
 
     private String name;
     private String lastname;
+    @Getter
+    @Setter
+    private String email;
+    @Getter
+    @Setter
+    private String username;
+    @Getter
+    @Setter
+    private String password;
 
     @Temporal(TemporalType.DATE)
     private Date birthdate;
@@ -36,7 +45,9 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
-    @ManyToMany
+    @Getter
+    @Setter
+    @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -53,7 +64,7 @@ public class User {
     private Set<Skill> skills;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Workshop> workshops;
+    private List<Workshop> workshops = new ArrayList<>(); // Fixed initialization
 
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -65,6 +76,9 @@ public class User {
     // Many-to-many relationship with Team through TeamMembers
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamMembers> teamMembers;
+  
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserQuizScore> userQuizScores;  // List of quiz scores for the user
 
     private int monitorPoints = 0;
 
@@ -81,4 +95,25 @@ public class User {
         HEAD_COACH,
         MASTER_MENTOR
     }
-}
+
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+  
+      public List<UserQuizScore> getUserQuizScores() {
+        return userQuizScores;
+    }
+
+    public void setUserQuizScores(List<UserQuizScore> userQuizScores) {
+        this.userQuizScores = userQuizScores;
+    }
+  
+    public List<Workshop> getWorkshops() {
+        return workshops;
+    }
+
+    public void setWorkshops(List<Workshop> workshops) {
+        this.workshops = workshops;
+    }

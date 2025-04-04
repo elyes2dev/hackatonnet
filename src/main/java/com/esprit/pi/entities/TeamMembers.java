@@ -22,7 +22,7 @@ public class TeamMembers {
     private Long id;
 
     // Many-to-one relationship with Team
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "team_id", nullable = false)
     private Team team;
 

@@ -17,14 +17,16 @@ import java.util.List;
 @Entity
 public class Hackathon {
 
-        @Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String title;
     private String location;
     private String logo;
+
     private int maxMembers;
+
     private Boolean isOnline;  // Assuming it's a boolean value indicating if it's online or not.
 
     private String description;

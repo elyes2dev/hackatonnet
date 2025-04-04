@@ -10,27 +10,11 @@ import java.util.Optional;
 
 @Service
 public class ImageModelServiceImpl implements IImageModelService {
-
     @Autowired
-    private IImageModelRepository imageModelRepository;
+    private IImageModelRepository imageRepository;
 
     @Override
-    public ImageModel save(ImageModel imageModel) {
-        return imageModelRepository.save(imageModel);
-    }
-
-    @Override
-    public Optional<ImageModel> findById(Long id) {
-        return imageModelRepository.findById(id);
-    }
-
-    @Override
-    public List<ImageModel> findAll() {
-        return imageModelRepository.findAll();
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        imageModelRepository.deleteById(id);
+    public ImageModel getImageById(Long id) {
+        return imageRepository.findById(id).orElse(null);
     }
 }

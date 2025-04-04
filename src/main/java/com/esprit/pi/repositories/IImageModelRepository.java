@@ -10,6 +10,5 @@ import java.util.List;
 
 @Repository
 public interface IImageModelRepository extends JpaRepository<ImageModel, Long> {
-    @Query("SELECT i FROM ImageModel i WHERE i.resource.id = :resourceId")
-    List<ImageModel> findByResourceId(@Param("resourceId") Long resourceId);
+
 }

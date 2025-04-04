@@ -1,13 +1,13 @@
 package com.esprit.pi.services;
 
 import com.esprit.pi.entities.Document;
+import com.esprit.pi.entities.ImageModel;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface IDocumentService {
-    public Document saveDocuments(Document document);
-    public Optional<Document> findById(Long id);
-    public List<Document> findAll();
-    public void deleteById(Long id);
+    ImageModel saveDocument(ImageModel imageModel);
+    List<ImageModel> saveDocuments(List<ImageModel> imageModels);
+
 }

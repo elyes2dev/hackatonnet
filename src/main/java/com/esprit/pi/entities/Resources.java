@@ -30,50 +30,36 @@ public class Resources {
 
     @Enumerated(EnumType.STRING)
     private skillEnum niveau;
-    private String image;
+  //  private String image;
     @ManyToOne
     @JoinColumn(name = "workshop_id", nullable = false)
     @JsonBackReference
     private Workshop workshop;
 
- //   @OneToMany(mappedBy = "resource")
- //   private List<Document> documents;
+    @OneToMany(mappedBy = "resource")
+    private List<Document> documents;
 
-   // @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-   // @JoinTable(name = "resource_images",
-     //       joinColumns = {
-     //               @JoinColumn(name = "id_resources")
-     //       },
-    //        inverseJoinColumns = {
-    //                @JoinColumn(name = "id_image")
-   //         }
-   // )
-  //  private Set<ImageModel> resourceImages;
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(name = "resource_images",
+            joinColumns = {
+                    @JoinColumn(name = "id_resources")
+            },
+            inverseJoinColumns = {
+                    @JoinColumn(name = "id_image")
+            }
+    )
+    private Set<ImageModel> resourceImages;
 
 
-    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Document> documents = new ArrayList<>();
-
-    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ImageModel> images = new ArrayList<>();
 
     // Helper methods
-    public void addDocument(Document document) {
-        documents.add(document);
-        document.setResource(this);
+
+    public Set<ImageModel> getResourceImages() {
+        return resourceImages;
     }
 
-    public void addImage(ImageModel image) {
-        images.add(image);
-        image.setResource(this);
-    }
-
-    public List<ImageModel> getImages() {
-        return images;
-    }
-
-    public void setImages(List<ImageModel> images) {
-        this.images = images;
+    public void setResourceImages(Set<ImageModel> resourceImages) {
+        this.resourceImages = resourceImages;
     }
 
     public List<Document> getDocuments() {
@@ -92,13 +78,6 @@ public class Resources {
         this.workshop = workshop;
     }
 
-    public String getImage() {
-        return image;
-    }
-
-    public void setImage(String image) {
-        this.image = image;
-    }
 
     public skillEnum getNiveau() {
         return niveau;

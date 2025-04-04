@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface IImageModelService {
-    ImageModel save(ImageModel imageModel);
-    Optional<ImageModel> findById(Long id);
-    List<ImageModel> findAll();
-    void deleteById(Long id);
+    ImageModel getImageById(Long id);
+
 }

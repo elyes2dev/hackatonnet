@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Getter
 @Setter
@@ -13,71 +16,52 @@ import lombok.Setter;
 @AllArgsConstructor
 @Table(name = "image_model")
 public class ImageModel {
-    //@Id
-   // @GeneratedValue(strategy = GenerationType.IDENTITY)
-   // private Long id_image;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id_image;
 
-   // private String path;
+    private String path;
 
-  //  private String type;
+    private String type;
 
-  //  @Column(length = 5000000)
-  //  private byte[] picByte;
+    @Column(length = 5000000)
+    private byte[] picByte;
 
-  //  public ImageModel(String path, String type, byte[] picByte) {
-   //     this.path = path;
-   //     this.type = type;
-   //     this.picByte = picByte;
-   // }
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-
-    private String name;
-    private String filePath;
-    private String fileType;
-    private Long fileSize;
-
-    @ManyToOne
-    @JoinColumn(name = "resource_id")
-    private Resources resource;
-
-    // Add setResource method
-    public void setResource(Resources resource) {
-        this.resource = resource;
+    public ImageModel(String path, String type, byte[] picByte) {
+        this.path = path;
+        this.type = type;
+        this.picByte = picByte;
     }
 
-  public String getFilePath() {
-    return filePath;
+    public Long getId_image() {
+    return id_image;
   }
 
-  public void setFilePath(String filePath) {
-    this.filePath = filePath;
+  public void setId_image(Long id_image) {
+    this.id_image = id_image;
   }
 
-  public Resources getResource() {
-    return resource;
+  public String getPath() {
+    return path;
   }
 
-  public Long getFileSize() {
-    return fileSize;
+  public void setPath(String path) {
+    this.path = path;
   }
 
-  public void setFileSize(Long fileSize) {
-    this.fileSize = fileSize;
+  public String getType() {
+    return type;
   }
 
-  public String getFileType() {
-    return fileType;
+  public void setType(String type) {
+    this.type = type;
   }
 
-  public void setFileType(String fileType) {
-    this.fileType = fileType;
+  public byte[] getPicByte() {
+    return picByte;
   }
 
-  // Getters and setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+  public void setPicByte(byte[] picByte) {
+    this.picByte = picByte;
+  }
 }

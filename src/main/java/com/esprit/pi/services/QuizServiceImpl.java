@@ -1,5 +1,6 @@
 package com.esprit.pi.services;
 
+import com.esprit.pi.entities.Question;
 import com.esprit.pi.entities.Quiz;
 import com.esprit.pi.repositories.IQuestionRepository;
 import com.esprit.pi.repositories.IQuizRepository;
@@ -8,6 +9,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,8 +23,22 @@ public class QuizServiceImpl implements IQuizService {
 
     @Override
     public Quiz createQuiz(Quiz quiz) {
+        // If there are questions, link them to the quiz
+        if (quiz.getQuestions() != null && !quiz.getQuestions().isEmpty()) {
+            for (Question question : quiz.getQuestions()) {
+                question.setQuiz(quiz); // Set the quiz for each question
+
+
+                if (question.getAnswers() == null) {
+                    question.setAnswers(new ArrayList<>());
+                }
+            }
+        }
+
+        // Save the quiz (which will cascade and save questions as well)
         return quizRepository.save(quiz);
     }
+
 
     @Override
     public Quiz updateQuiz(Long id, Quiz quiz) {
@@ -46,17 +62,17 @@ public class QuizServiceImpl implements IQuizService {
     @Transactional
     @Override
     public void deleteQuiz(Long id) {
-        Quiz quiz = quizRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Quiz not found with id: " + id));
+        // First, delete all answers associated with the quiz
+        questionRepository.deleteAnswersByQuizId(id);
 
-        // ✅ Explicitly delete all questions first
-        if (!quiz.getQuestions().isEmpty()) {
-            questionRepository.deleteAll(quiz.getQuestions());
-        }
+        // Now delete all questions related to the quiz
+        questionRepository.deleteQuestionsByQuizId(id);
 
-        // ✅ Now delete the quiz
-        quizRepository.delete(quiz);
+        // Delete the quiz directly using a query
+        quizRepository.deleteQuizById(id);
     }
+
+
 
 
 }

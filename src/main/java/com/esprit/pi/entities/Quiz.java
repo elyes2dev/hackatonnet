@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,6 +25,7 @@ public class Quiz {
 
     @OneToOne
     @JoinColumn(name = "workshop_id", nullable = false, unique = true)
+    @JsonBackReference  // Prevent recursion by using @JsonBackReference
     private Workshop workshop;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)

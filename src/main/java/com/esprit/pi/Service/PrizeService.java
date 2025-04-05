@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -232,6 +233,12 @@ public class PrizeService implements IPrizeService{
             throw new RuntimeException("Unauthorized: You can only cancel your own prizes.");
         }
 
+        // Check if the hackathon has already started
+        Date hackathonStartDate = prize.getHackathon().getStartDate();
+        if (hackathonStartDate != null && hackathonStartDate.before(new Date())) {
+            throw new RuntimeException("Cannot cancel prize: The hackathon has already started.");
+        }
+
         // If the prize is already approved, deduct points and adjust badge if necessary
         if (prize.getStatus() == ApplicationStatus.APPROVED) {
             int points = calculatePoints(prize);
@@ -244,6 +251,7 @@ public class PrizeService implements IPrizeService{
 
         return prizeRepository.save(prize);
     }
+
 
     public void deletePrize(long id) {
         prizeRepository.deleteById(id);

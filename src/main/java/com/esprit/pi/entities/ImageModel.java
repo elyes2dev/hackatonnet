@@ -25,6 +25,7 @@ public class ImageModel {
     private String type;
 
     @Column(length = 5000000)
+    @Lob
     private byte[] picByte;
 
     public ImageModel(String path, String type, byte[] picByte) {

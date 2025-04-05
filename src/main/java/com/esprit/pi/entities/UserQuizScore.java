@@ -1,5 +1,8 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,10 +24,12 @@ public class UserQuizScore {
 
     @ManyToOne
     @JoinColumn(name = "quiz_id")
+    @JsonIgnoreProperties({"questions", "userQuizScores"}) // Avoid circular references with Quiz
     private Quiz quiz;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({"userQuizScores", "password", "roles", "skills", "hackathons", "sponsorApplication", "teamMembers"})
     private User user;
 
     private Integer score;  // Score the user achieved

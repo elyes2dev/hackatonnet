@@ -1,6 +1,8 @@
 package com.esprit.pi.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,6 +36,7 @@ public class Quiz {
     private boolean isPublished; // Controls if the quiz is visible to users
 
     @OneToMany(mappedBy = "quiz")
+    @JsonIgnoreProperties({"user", "quiz"}) // Avoid circular references and unnecessary data
     private List<UserQuizScore> userQuizScores;
 
     public List<UserQuizScore> getUserQuizScores() {

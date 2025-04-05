@@ -1,6 +1,8 @@
 package com.esprit.pi.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -81,6 +83,7 @@ public class User implements UserDetails {
     private List<TeamMembers> teamMembers;
   
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties({"user", "quiz"}) // Avoid circular references and unnecessary data
     private List<UserQuizScore> userQuizScores;  // List of quiz scores for the user
 
     private int monitorPoints = 0;

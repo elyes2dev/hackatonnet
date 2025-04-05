@@ -47,5 +47,13 @@ public class QuestionController {
         List<Question> questions = questionService.getAllQuestions();
         return ResponseEntity.ok(questions);
     }
+
+    // Endpoint to get questions by quizId
+    @GetMapping("/quiz/{quizId}")
+    public List<Question> getQuestionsByQuizId(@PathVariable Long quizId) {
+        return questionService.getQuestionsByQuizId(quizId);
+    }
+
+
 }
 

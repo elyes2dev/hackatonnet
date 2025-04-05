@@ -23,7 +23,7 @@ public class Quiz {
 
     private String title;
 
-    @OneToOne
+    @OneToOne()  // Add this if you want cascading behavior
     @JoinColumn(name = "workshop_id", nullable = false, unique = true)
     @JsonBackReference  // Prevent recursion by using @JsonBackReference
     private Workshop workshop;

@@ -12,4 +12,5 @@ public interface IQuestionService {
   //  List<Question> getQuestionsByQuiz(Long quizId);
     void deleteQuestion(Long id);
     List<Question> getAllQuestions();
+ public List<Question> getQuestionsByQuizId(Long quizId);
 }

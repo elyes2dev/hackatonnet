@@ -26,6 +26,9 @@ public interface IQuestionRepository extends JpaRepository<Question, Long> {
     @Query(value = "DELETE FROM question_answers WHERE question_id IN (SELECT id_question FROM question WHERE quiz_id = :quizId)", nativeQuery = true)
     void deleteAnswersByQuizId(Long quizId);
 
+    // Custom query to find questions by quizId
+    @Query("SELECT q FROM Question q WHERE q.quiz.id_quiz = :quizId")
+    List<Question> findQuestionsByQuizId(Long quizId);
 
 
 }

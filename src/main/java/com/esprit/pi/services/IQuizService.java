@@ -1,5 +1,6 @@
 package com.esprit.pi.services;
 
+import com.esprit.pi.entities.Question;
 import com.esprit.pi.entities.Quiz;
 
 import java.util.List;
@@ -11,5 +12,7 @@ public interface IQuizService {
     Optional<Quiz> getQuizById(Long id);
     List<Quiz> getAllQuizzes();
     void deleteQuiz(Long id);
+    List<Quiz> getQuizzesByWorkshop(Long workshopId);
+
 }
 

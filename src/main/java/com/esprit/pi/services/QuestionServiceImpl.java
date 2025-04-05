@@ -47,5 +47,12 @@ public class QuestionServiceImpl implements IQuestionService {
     public void deleteQuestion(Long id) {
         questionRepository.deleteById(id);
     }
+    // Method to get questions by quizId
+    @Override
+    public List<Question> getQuestionsByQuizId(Long quizId) {
+        return questionRepository.findQuestionsByQuizId(quizId);
+    }
+
+
 }
 

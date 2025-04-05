@@ -43,11 +43,20 @@ public class QuizServiceImpl implements IQuizService {
     @Override
     public Quiz updateQuiz(Long id, Quiz quiz) {
         if (quizRepository.existsById(id)) {
+            // Set the Quiz ID to ensure proper updating
             quiz.setId_quiz(id);
+
+            // Update the questions: Set the quiz reference for each question
+            for (Question question : quiz.getQuestions()) {
+                question.setQuiz(quiz);  // Ensure the question is associated with the updated quiz
+            }
+
+            // Save the quiz and its associated questions
             return quizRepository.save(quiz);
         }
         throw new RuntimeException("Quiz not found");
     }
+
 
     @Override
     public Optional<Quiz> getQuizById(Long id) {
@@ -71,6 +80,13 @@ public class QuizServiceImpl implements IQuizService {
         // Delete the quiz directly using a query
         quizRepository.deleteQuizById(id);
     }
+
+
+    @Override
+    public List<Quiz> getQuizzesByWorkshop(Long workshopId) {
+        return quizRepository.findByWorkshopId(workshopId);
+    }
+
 
 
 

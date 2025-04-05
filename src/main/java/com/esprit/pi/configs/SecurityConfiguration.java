@@ -27,18 +27,18 @@ public class SecurityConfiguration {
         this.userRepository = userRepository;
     }
 
-    // Security Filter Chain for API
+
     @Bean
     @Order(1)
     public SecurityFilterChain basicAuthSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .cors()
                 .and()
-                .securityMatcher("/api/**", "/auth/**")
-                .csrf(csrf -> csrf.disable())  // Disable CSRF protection
+                .securityMatcher("/api/**", "/auth/**","/**")
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> {
-                    request.requestMatchers("/api/open/**", "/auth/**").permitAll();  // Allow public access
-                    request.anyRequest().authenticated();  // Require JWT authentication for other endpoints
+                    request.requestMatchers("/api/open/**", "/auth/**","/**").permitAll();
+                    request.anyRequest().authenticated();
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

@@ -1,8 +1,8 @@
 package com.esprit.pi.controllers;
 
 import com.esprit.pi.entities.ApplicationStatus;
-import com.esprit.pi.entities.MonitorApplication;
-import com.esprit.pi.services.MonitorApplicationService;
+import com.esprit.pi.entities.MentorApplication;
+import com.esprit.pi.services.MentorApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -22,7 +22,7 @@ import java.util.Optional;
 public class MentorApplicationController {
 
     @Autowired
-    private MonitorApplicationService applicationService;
+    private MentorApplicationService applicationService;
 
     // Create
     @PostMapping
@@ -31,16 +31,16 @@ public class MentorApplicationController {
             @ApiResponse(responseCode = "201", description = "Application created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
-    public ResponseEntity<MonitorApplication> createApplication(@RequestBody MonitorApplication application) {
-        MonitorApplication created = applicationService.createApplication(application);
+    public ResponseEntity<MentorApplication> createApplication(@RequestBody MentorApplication application) {
+        MentorApplication created = applicationService.createApplication(application);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     // Read
     @GetMapping
     @Operation(summary = "Get all mentor applications")
-    public ResponseEntity<List<MonitorApplication>> getAllApplications() {
-        List<MonitorApplication> applications = applicationService.getAllApplications();
+    public ResponseEntity<List<MentorApplication>> getAllApplications() {
+        List<MentorApplication> applications = applicationService.getAllApplications();
         return new ResponseEntity<>(applications, HttpStatus.OK);
     }
 
@@ -50,30 +50,30 @@ public class MentorApplicationController {
             @ApiResponse(responseCode = "200", description = "Found the application"),
             @ApiResponse(responseCode = "404", description = "Application not found")
     })
-    public ResponseEntity<MonitorApplication> getApplicationById(@PathVariable Long id) {
-        Optional<MonitorApplication> application = applicationService.getApplicationById(id);
+    public ResponseEntity<MentorApplication> getApplicationById(@PathVariable Long id) {
+        Optional<MentorApplication> application = applicationService.getApplicationById(id);
         return application.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/mentor/{mentorId}")
     @Operation(summary = "Get applications by mentor ID")
-    public ResponseEntity<List<MonitorApplication>> getApplicationsByMentorId(@PathVariable Long mentorId) {
-        List<MonitorApplication> applications = applicationService.getApplicationsByMentorId(mentorId);
+    public ResponseEntity<List<MentorApplication>> getApplicationsByMentorId(@PathVariable Long mentorId) {
+        List<MentorApplication> applications = applicationService.getApplicationsByUserId(mentorId);
         return new ResponseEntity<>(applications, HttpStatus.OK);
     }
 
     @GetMapping("/status/{status}")
     @Operation(summary = "Get applications by status")
-    public ResponseEntity<List<MonitorApplication>> getApplicationsByStatus(@PathVariable ApplicationStatus status) {
-        List<MonitorApplication> applications = applicationService.getApplicationsByStatus(status);
+    public ResponseEntity<List<MentorApplication>> getApplicationsByStatus(@PathVariable ApplicationStatus status) {
+        List<MentorApplication> applications = applicationService.getApplicationsByStatus(status);
         return new ResponseEntity<>(applications, HttpStatus.OK);
     }
 
     @GetMapping("/experience")
     @Operation(summary = "Get applications by previous experience")
-    public ResponseEntity<List<MonitorApplication>> getApplicationsByExperience(@RequestParam boolean hasPreviousExperience) {
-        List<MonitorApplication> applications = applicationService.getApplicationsByExperience(hasPreviousExperience);
+    public ResponseEntity<List<MentorApplication>> getApplicationsByExperience(@RequestParam boolean hasPreviousExperience) {
+        List<MentorApplication> applications = applicationService.getApplicationsByExperience(hasPreviousExperience);
         return new ResponseEntity<>(applications, HttpStatus.OK);
     }
 
@@ -84,8 +84,8 @@ public class MentorApplicationController {
             @ApiResponse(responseCode = "200", description = "Application updated successfully"),
             @ApiResponse(responseCode = "404", description = "Application not found")
     })
-    public ResponseEntity<MonitorApplication> updateApplication(@PathVariable Long id, @RequestBody MonitorApplication application) {
-        MonitorApplication updated = applicationService.updateApplication(id, application);
+    public ResponseEntity<MentorApplication> updateApplication(@PathVariable Long id, @RequestBody MentorApplication application) {
+        MentorApplication updated = applicationService.updateApplication(id, application);
         if (updated != null) {
             return new ResponseEntity<>(updated, HttpStatus.OK);
         } else {
@@ -100,10 +100,10 @@ public class MentorApplicationController {
             @ApiResponse(responseCode = "200", description = "Status updated successfully"),
             @ApiResponse(responseCode = "404", description = "Application not found")
     })
-    public ResponseEntity<MonitorApplication> updateApplicationStatus(
+    public ResponseEntity<MentorApplication> updateApplicationStatus(
             @PathVariable Long id,
             @RequestParam ApplicationStatus status) {
-        MonitorApplication updated = applicationService.updateApplicationStatus(id, status);
+        MentorApplication updated = applicationService.updateApplicationStatus(id, status);
         if (updated != null) {
             return new ResponseEntity<>(updated, HttpStatus.OK);
         } else {

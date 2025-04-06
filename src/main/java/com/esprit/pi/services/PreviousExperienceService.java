@@ -1,8 +1,8 @@
 package com.esprit.pi.services;
 
-import com.esprit.pi.entities.MonitorApplication;
+import com.esprit.pi.entities.MentorApplication;
 import com.esprit.pi.entities.PreviousExperience;
-import com.esprit.pi.repositories.MonitorApplicationRepository;
+import com.esprit.pi.repositories.MentorApplicationRepository;
 import com.esprit.pi.repositories.PreviousExperienceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,12 +18,12 @@ public class PreviousExperienceService {
     private PreviousExperienceRepository previousExperienceRepository;
 
     @Autowired
-    private MonitorApplicationRepository monitorApplicationRepository;
+    private MentorApplicationRepository mentorApplicationRepository;
 
     // Create
     @Transactional
     public PreviousExperience createExperience(Long applicationId, PreviousExperience experience) {
-        Optional<MonitorApplication> applicationOpt = monitorApplicationRepository.findById(applicationId);
+        Optional<MentorApplication> applicationOpt = mentorApplicationRepository.findById(applicationId);
         if (applicationOpt.isPresent()) {
             experience.setApplication(applicationOpt.get());
             return previousExperienceRepository.save(experience);

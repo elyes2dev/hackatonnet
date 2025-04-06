@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.jdbc.Work;
 
 import java.util.Date;
 import java.util.List;
@@ -66,13 +65,20 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamMembers> teamMembers;
 
-    private int monitorPoints = 0;
+    private Integer mentorPoints;
 
     @Enumerated(EnumType.STRING)
     private BadgeLevel badge = BadgeLevel.JUNIOR_COACH; // Default
 
     @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<MonitorEvaluation> evaluations;
+    private Set<MentorEvaluation> evaluations;
+
+
+    // Add a specific reference to mentor application
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private MentorApplication mentorApplication;
+
+
 
     public enum BadgeLevel {
         JUNIOR_COACH,

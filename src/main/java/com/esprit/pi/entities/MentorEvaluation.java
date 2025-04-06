@@ -8,14 +8,12 @@ import lombok.Setter;
 
 import java.util.Date;
 
-
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MonitorEvaluation {
-
+public class MentorEvaluation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,4 +34,5 @@ public class MonitorEvaluation {
 
     @Column(nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;    }
+    private Date createdAt;
+}

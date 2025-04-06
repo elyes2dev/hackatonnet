@@ -6,27 +6,24 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ListMonitor {
+public class ListMentor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "monitor_id", nullable = false)
-    private User monitor;
+    @JoinColumn(name = "mentor_id", nullable = false)
+    private User mentor;
 
     @ManyToOne
     @JoinColumn(name = "hackathon_id", nullable = false)
     private Hackathon hackathon;
 
     private int numberOfTeams;
-
 }
-

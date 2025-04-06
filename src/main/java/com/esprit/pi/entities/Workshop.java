@@ -37,7 +37,7 @@ public class Workshop {
     @OneToOne(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
     private Quiz quiz;
 
-    @JsonManagedReference
+    @JsonManagedReference  // Prevent recursion in the Workshop-Resources relationship
     @OneToMany(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Resources> resources = new ArrayList<>(); // Fixed name & initialization
 

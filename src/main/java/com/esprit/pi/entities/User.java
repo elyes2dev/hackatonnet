@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -56,6 +57,8 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+  //  @JsonIgnore  // Prevents recursion when serializing the Role entity
+    @JsonIgnoreProperties("users")  // Ignore the 'users' field in Role to prevent recursion
     private Set<Role> roles;
 
     @ManyToMany

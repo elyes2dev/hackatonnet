@@ -6,6 +6,7 @@ import com.esprit.pi.entities.Workshop;
 import com.esprit.pi.repositories.UserRepository;
 import com.esprit.pi.services.IWorkshopService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,21 +23,25 @@ public class WorkshopController {
     @Autowired
     private UserRepository userRepository; // Ensure this repository is injected
 
-    // Add a workshop with a static user with ID 1
     @PostMapping("/add")
     public ResponseEntity<Workshop> addWorkshop(@RequestBody Workshop workshop) {
-        // Fetch the user with ID 1
-        Optional<User> userOptional = userRepository.findById(1L);  // Use the static user ID
-
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            workshop.setUser(user);  // Associate the workshop with the user
-            Workshop savedWorkshop = workshopService.addWorkshop(workshop);
-            return ResponseEntity.ok(savedWorkshop);
-        } else {
-            return ResponseEntity.notFound().build();  // If user not found, return 404
+        if (workshop.getUser() == null) {
+            return ResponseEntity.badRequest().body(null); // No user provided
         }
+
+        // Fetch the user from the database to make sure it's already persisted
+        User user = userRepository.findById(workshop.getUser().getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Set the user to the workshop
+        workshop.setUser(user);
+
+        // Save the workshop
+        Workshop savedWorkshop = workshopService.addWorkshop(workshop);
+        return ResponseEntity.ok(savedWorkshop);
     }
+
+
     @GetMapping("/{id}")
     public Optional<Workshop> getWorkshopById(@PathVariable Long id) {
         return workshopService.findById(id);

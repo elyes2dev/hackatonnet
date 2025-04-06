@@ -1,9 +1,12 @@
 package com.esprit.pi.services;
 
 import com.esprit.pi.entities.PasswordResetToken;
+import com.esprit.pi.entities.Role;
 import com.esprit.pi.entities.User;
 import com.esprit.pi.repositories.PasswordResetTokenRepository;
+import com.esprit.pi.repositories.RoleRepository;
 import com.esprit.pi.repositories.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,6 +20,9 @@ public class UserService implements IUserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Autowired
     private PasswordResetTokenRepository passwordTokenRepository;
@@ -37,8 +43,15 @@ public class UserService implements IUserService {
 
     @Override
     public User createUser(User user) {
+        // Check if roles are provided; otherwise, assign a default role
+        if (user.getRoles().isEmpty()) {
+            Role defaultRole = roleRepository.findByName("ROLE_USER");
+            user.getRoles().add(defaultRole);
+        }
+
         return userRepository.save(user);
     }
+
 
 
     @Override
@@ -48,14 +61,18 @@ public class UserService implements IUserService {
             existingUser.setEmail(user.getEmail());
             existingUser.setRoles(user.getRoles());
             existingUser.setPassword(user.getPassword());
+            existingUser.setName(user.getName());
             return userRepository.save(existingUser);
         }).orElse(null);
     }
 
     @Override
     public void deleteUser(Long id) {
-
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+        userRepository.delete(user);
     }
+
 
     public void changeUserPassword(User user, String password, String token) {
         user.setPassword(passwordEncoder.encode(password));

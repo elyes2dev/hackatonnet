@@ -1,6 +1,9 @@
 package com.esprit.pi.controllers;
 
+import com.esprit.pi.entities.Role;
 import com.esprit.pi.entities.User;
+import com.esprit.pi.repositories.RoleRepository;
+import com.esprit.pi.repositories.UserRepository;
 import com.esprit.pi.services.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/users")
@@ -15,6 +19,9 @@ public class UserController {
 
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @GetMapping
     public List<User> getAllUsers() {

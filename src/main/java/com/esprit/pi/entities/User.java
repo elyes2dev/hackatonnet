@@ -25,14 +25,11 @@ public class User implements UserDetails {
 
     private String name;
     private String lastname;
-    @Getter
-    @Setter
+
     private String email;
-    @Getter
-    @Setter
+
     private String username;
-    @Getter
-    @Setter
+
     private String password;
 
     @Temporal(TemporalType.DATE)
@@ -45,23 +42,23 @@ public class User implements UserDetails {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
-    @Getter
-    @Setter
+
     @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
-    @ManyToMany
+
+    @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
-            name = "user_skill",
+            name = "user_skills",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
-    private Set<Skill> skills;
+    private Set<Skill> skills = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Workshop> workshops = new ArrayList<>(); // Fixed initialization

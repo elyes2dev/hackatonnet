@@ -48,7 +48,7 @@ public class AuthController {
     public Map<String, String> signup(@RequestBody User user) throws JsonProcessingException {
         // Save user to database
         userRepository.save(user);
-        login(user);
+
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "User registered successfully");

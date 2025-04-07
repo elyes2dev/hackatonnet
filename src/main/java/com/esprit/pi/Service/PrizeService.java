@@ -254,8 +254,31 @@ public class PrizeService implements IPrizeService{
 
 
     public void deletePrize(long id) {
-        prizeRepository.deleteById(id);
+        Prize prize = prizeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Prize not found"));
+
+        // If the prize is already approved, deduct points before deletion
+        if (prize.getStatus() == ApplicationStatus.APPROVED) {
+            int points = calculatePoints(prize);
+            sponsorRewardService.deductPoints(prize.getSponsor().getId(), points);
+        }
+
+        // Break bidirectional relationships safely
+        User sponsor = prize.getSponsor();
+        if (sponsor != null) {
+            prize.setSponsor(null);
+        }
+
+        Hackathon hackathon = prize.getHackathon();
+        if (hackathon != null && hackathon.getPrizes() != null) {
+            prize.setHackathon(null);
+            hackathon.getPrizes().remove(prize);
+        }
+
+        prizeRepository.delete(prize); // Safe delete
     }
+
+
 
     public List<SponsorInfoDTO> getSponsorsByHackathon(Long hackathonId) {
         return prizeRepository.findByHackathonId(hackathonId).stream()

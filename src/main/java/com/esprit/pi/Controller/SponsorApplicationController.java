@@ -6,10 +6,13 @@ import com.esprit.pi.Service.ISponsorApplicationService;
 import com.esprit.pi.entities.SponsorApplication;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @AllArgsConstructor
@@ -62,12 +65,15 @@ public class SponsorApplicationController {
     }
 
     @DeleteMapping("/deleteapplication/{id}")
-    public ResponseEntity<?> deleteApplication(@PathVariable int id) {
-        try {
-            sponsorApplicationService.deleteApplication(id);
-            return ResponseEntity.ok("Application deleted successfully.");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Map<String, String>> deleteApplication(@PathVariable int id) {
+        sponsorApplicationService.deleteApplication(id);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Application deleted successfully.");
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(response);
     }
+
+
 }

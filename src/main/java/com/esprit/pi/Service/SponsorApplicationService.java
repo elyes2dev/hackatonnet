@@ -4,11 +4,13 @@ import com.esprit.pi.DTO.SponsorApplicationDTO;
 import com.esprit.pi.DTO.UserDTO;
 import com.esprit.pi.Repository.IRoleRepository;
 import com.esprit.pi.Repository.ISponsorApplicationRepository;
+import com.esprit.pi.Repository.ISponsorRewardRepository;
 import com.esprit.pi.Repository.IUserRepository;
 import com.esprit.pi.entities.ApplicationStatus;
 import com.esprit.pi.entities.Role;
 import com.esprit.pi.entities.SponsorApplication;
 import com.esprit.pi.entities.User;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -33,6 +35,8 @@ public class SponsorApplicationService implements ISponsorApplicationService{
     private EmailService emailService;
     @Autowired
     SponsorNotificationService sponsorNotificationService;
+    @Autowired
+    ISponsorRewardRepository sponsorRewardRepository;
 
 
     static final int EXPIRATION_MINUTES = 5; // 5 minutes for testing
@@ -49,8 +53,20 @@ public class SponsorApplicationService implements ISponsorApplicationService{
         application.setUser(user);
         application.setStatus(ApplicationStatus.PENDING);
         application.setSubmittedAt(LocalDateTime.now());
-        return sponsorApplicationRepository.save(application);
+
+        SponsorApplication savedApp = sponsorApplicationRepository.save(application);
+
+        // 🔔 Send notification to admins
+        String message = String.format(
+                "New sponsor application submitted by %s (Company: %s)",
+                user.getName(),
+                application.getCompanyName()
+        );
+        sponsorNotificationService.createGlobalNotification(message);
+
+        return savedApp;
     }
+
 
     public List<SponsorApplication> getAllApplications() {
         return sponsorApplicationRepository.findAll();
@@ -121,9 +137,48 @@ public class SponsorApplicationService implements ISponsorApplicationService{
         return sponsorApplicationRepository.save(application);
     }
 
+    @Transactional
     public void deleteApplication(int id) {
-        sponsorApplicationRepository.deleteById(id);
+        SponsorApplication application = sponsorApplicationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+
+        User user = application.getUser();
+
+        if (user != null) {
+            // If the application was approved, handle the SponsorReward and SPONSOR role
+            if (application.getStatus() == ApplicationStatus.APPROVED) {
+                // Remove the sponsorReward if it exists
+                if (user.getSponsorReward() != null) {
+                    user.setSponsorReward(null);  // Remove the SponsorReward from the User
+                }
+
+                // Delete the associated SponsorReward if it exists
+                sponsorRewardRepository.findBySponsorId(user.getId()).ifPresent(reward -> {
+                    sponsorRewardRepository.delete(reward); // Delete the reward explicitly
+                });
+
+                // Remove SPONSOR role if the user has it
+                Role sponsorRole = roleRepository.findByName("SPONSOR")
+                        .orElseThrow(() -> new RuntimeException("Role SPONSOR not found"));
+
+                if (user.getRoles().contains(sponsorRole)) {
+                    user.getRoles().remove(sponsorRole); // Remove the role from the user
+                    userRepository.save(user); // Save the user to persist the change
+                }
+            }
+
+            // Clean up references (this part is applicable for both pending, approved, and rejected applications)
+            user.setSponsorApplication(null);
+            application.setUser(null);
+            userRepository.save(user); // Save user to persist the change
+        }
+
+        // Finally, delete the application
+        sponsorApplicationRepository.delete(application);
     }
+
+
+
 
 
     @Scheduled(cron = "0 * * * * ?") // Run every minute for testing

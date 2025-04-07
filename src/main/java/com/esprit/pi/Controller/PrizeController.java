@@ -7,10 +7,13 @@ import com.esprit.pi.entities.Prize;
 import com.esprit.pi.entities.User;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @AllArgsConstructor
@@ -104,14 +107,24 @@ public class PrizeController {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePrize(@PathVariable long id) {
+    public ResponseEntity<Map<String, String>> deletePrize(@PathVariable long id) {
+        Map<String, String> response = new HashMap<>();
         try {
             prizeService.deletePrize(id);
-            return ResponseEntity.ok("Prize deleted successfully.");
+            response.put("message", "Prize deleted successfully.");
+            return ResponseEntity
+                    .ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            response.put("error", e.getMessage());
+            return ResponseEntity
+                    .badRequest()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(response);
         }
     }
+
     // Get sponsors by badge (sorted) for a specific hackathon
     @GetMapping("/sponsors-by-badge/{hackathonId}")
     public ResponseEntity<List<SponsorInfoDTO>> getSponsorsByBadge(@PathVariable Long hackathonId) {

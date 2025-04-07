@@ -19,11 +19,11 @@ public class Prize {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JsonIgnore // Prevent serialization of the full User object
     private User sponsor; // The sponsor giving the prize
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JsonIgnore // Prevent serialization of the full User object
     private Hackathon hackathon; // The hackathon receiving the prize
 

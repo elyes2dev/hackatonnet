@@ -19,7 +19,7 @@ public class SponsorApplication {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     @JsonBackReference // Prevents infinite recursion
     private User user; // The user who applied
 

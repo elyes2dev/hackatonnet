@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -52,17 +53,21 @@ public class User {
     private Set<Skill> skills;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Workshop> workshops;
 
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Hackathon> hackathons;  // This adds the relationship to Hackathons
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private SponsorApplication sponsorApplication; // One-to-One Relationship
 
     // Many-to-many relationship with Team through TeamMembers
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<TeamMembers> teamMembers;
 
     private Integer mentorPoints;
@@ -71,11 +76,13 @@ public class User {
     private BadgeLevel badge = BadgeLevel.JUNIOR_COACH; // Default
 
     @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<MentorEvaluation> evaluations;
 
 
     // Add a specific reference to mentor application
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private MentorApplication mentorApplication;
 
 

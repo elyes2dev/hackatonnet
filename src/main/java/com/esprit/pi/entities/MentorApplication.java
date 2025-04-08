@@ -1,5 +1,7 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -46,6 +48,7 @@ public class MentorApplication {
     private ApplicationStatus status = ApplicationStatus.PENDING;
 
     @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference // This side will be serialized
     private List<PreviousExperience> previousExperiences;
 
     @CreationTimestamp

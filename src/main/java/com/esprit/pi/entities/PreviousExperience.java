@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,6 +20,7 @@ public class PreviousExperience {
 
     @ManyToOne
     @JoinColumn(name = "application_id", nullable = false)
+    @JsonBackReference // This prevents serialization of the back reference
     private MentorApplication application;
 
     private int year;

@@ -6,9 +6,14 @@ import com.esprit.pi.entities.Resources;
 import com.esprit.pi.entities.Workshop;
 import com.esprit.pi.entities.skillEnum;
 import com.esprit.pi.repositories.IWorkshopRepository;
+import com.esprit.pi.services.FileStorageService;
+import com.esprit.pi.services.IImageModelService;
 import com.esprit.pi.services.IResourcesService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +36,14 @@ public class ResourcesController {
 
     @Autowired
     private IWorkshopRepository workshopRepository; // You'll need this to validate workshop existence
+
+
+    @Autowired
+    private FileStorageService fileStorageService; // You'll need this to validate workshop existence
+
+
+    @Autowired
+    private IImageModelService imageModelService; // You'll need this to validate workshop existence
 
     // Get all resources for a specific workshop
     @GetMapping
@@ -140,6 +153,27 @@ public class ResourcesController {
         Resources updatedResource = resourcesService.modifyResource(resource);
         return ResponseEntity.ok(updatedResource);
     }
+
+    @GetMapping("/{resourceId}/images/{imageId}/download")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadImage(
+            @PathVariable Long resourceId,
+            @PathVariable Long imageId) {
+        // Get the image model
+        ImageModel imageModel = imageModelService.getImageById(imageId);
+        if (imageModel == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        // Create an in-memory resource with the byte[] data from the database
+        org.springframework.core.io.Resource resource = new ByteArrayResource(imageModel.getPicByte());
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(imageModel.getType()))  // Use the correct media type from your entity
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + imageModel.getPath() + "\"")
+                .body(resource);
+    }
+
 
 }
 

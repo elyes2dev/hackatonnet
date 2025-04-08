@@ -34,6 +34,9 @@ public class ImageModel {
         this.picByte = picByte;
     }
 
+    public ImageModel() {
+    }
+
     public Long getId_image() {
     return id_image;
   }

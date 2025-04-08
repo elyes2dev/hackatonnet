@@ -30,5 +30,4 @@ public interface IResourcesService {
 
     Resources addResourceWithImages(Resources resource, MultipartFile[] files) throws IOException;
 
-
-}
+    }

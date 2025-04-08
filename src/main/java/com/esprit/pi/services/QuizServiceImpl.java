@@ -4,6 +4,7 @@ import com.esprit.pi.entities.Question;
 import com.esprit.pi.entities.Quiz;
 import com.esprit.pi.repositories.IQuestionRepository;
 import com.esprit.pi.repositories.IQuizRepository;
+import com.esprit.pi.repositories.IUserQuizScoreRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ import java.util.Optional;
 public class QuizServiceImpl implements IQuizService {
     @Autowired
     private IQuizRepository quizRepository;
+
+    @Autowired
+    private IUserQuizScoreRepository userQuizScoreRepository;
 
     @Autowired
     private IQuestionRepository questionRepository;
@@ -71,6 +75,9 @@ public class QuizServiceImpl implements IQuizService {
     @Transactional
     @Override
     public void deleteQuiz(Long id) {
+
+        // Delete all UserQuizScore records related to the quiz
+        userQuizScoreRepository.deleteByQuizId(id);
         // First, delete all answers associated with the quiz
         questionRepository.deleteAnswersByQuizId(id);
 

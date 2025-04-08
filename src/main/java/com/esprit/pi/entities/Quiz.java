@@ -35,7 +35,7 @@ public class Quiz {
 
     private boolean isPublished; // Controls if the quiz is visible to users
 
-    @OneToMany(mappedBy = "quiz")
+    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)  // Cascade deletion for UserQuizScore
     @JsonIgnoreProperties({"user", "quiz"}) // Avoid circular references and unnecessary data
     private List<UserQuizScore> userQuizScores;
 

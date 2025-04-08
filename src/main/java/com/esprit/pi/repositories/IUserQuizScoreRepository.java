@@ -29,4 +29,9 @@ public interface IUserQuizScoreRepository extends JpaRepository<UserQuizScore, L
     @Modifying
     @Query("DELETE FROM UserQuizScore uqs WHERE uqs.user.id = :userId AND uqs.quiz.id = :quizId")
     void deleteByUserIdAndQuizId(@Param("userId") Long userId, @Param("quizId") Long quizId);
+
+    @Modifying
+    @Query("DELETE FROM UserQuizScore uqs WHERE uqs.quiz.id = :quizId")
+    void deleteByQuizId(@Param("quizId") Long quizId);
+
 }

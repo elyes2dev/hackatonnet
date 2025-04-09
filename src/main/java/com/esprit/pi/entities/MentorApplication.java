@@ -34,8 +34,10 @@ public class MentorApplication {
     @Column(columnDefinition = "TEXT")
     private String applicationText;
 
+    @Column(nullable = true)
     private String cv;
 
+    @Column(nullable = true)
     private String uploadPaper;
 
     @ElementCollection
@@ -55,4 +57,7 @@ public class MentorApplication {
     @Column(nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
+
+
+
 }

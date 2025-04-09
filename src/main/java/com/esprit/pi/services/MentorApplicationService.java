@@ -10,7 +10,9 @@ import com.esprit.pi.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,34 +29,42 @@ public class MentorApplicationService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private FileStorageService fileStorageService;
+
     // Create
     @Transactional
-    public MentorApplication createApplication(MentorApplication application) {
-        // Set any defaults if needed
+    public MentorApplication createApplication(MentorApplication application,
+                                               MultipartFile cvFile,
+                                               MultipartFile uploadPaperFile) throws IOException {
+        // Set default status if null
         if (application.getStatus() == null) {
             application.setStatus(ApplicationStatus.PENDING);
         }
 
+        // Save CV file
+        if (cvFile != null && !cvFile.isEmpty()) {
+            String cvFilename = fileStorageService.storeFile(cvFile);
+            application.setCv(cvFilename);
+        } else {
+            throw new IllegalArgumentException("CV file is required");
+        }
+
+        // Save optional upload paper file
+        if (uploadPaperFile != null && !uploadPaperFile.isEmpty()) {
+            String uploadPaperFilename = fileStorageService.storeFile(uploadPaperFile);
+            application.setUploadPaper(uploadPaperFilename);
+        }
+
+        // Handle previous experiences
         if (application.getPreviousExperiences() != null) {
             for (PreviousExperience experience : application.getPreviousExperiences()) {
                 experience.setApplication(application);
             }
         }
 
-        // Save the application first
-        MentorApplication savedApplication = mentorApplicationRepository.save(application);
-
-        // If there are previous experiences, set their application reference and save them
-        if (application.getPreviousExperiences() != null) {
-            for (PreviousExperience exp : application.getPreviousExperiences()) {
-                exp.setApplication(savedApplication);
-            }
-            // No need to save experiences individually, they'll be cascaded
-        }
-
-        return savedApplication;
+        return mentorApplicationRepository.save(application);
     }
-
     // Read
     public List<MentorApplication> getAllApplications() {
         return mentorApplicationRepository.findAll();
@@ -76,16 +86,38 @@ public class MentorApplicationService {
         return mentorApplicationRepository.findByHasPreviousExperience(hasPreviousExperience);
     }
 
-    // Update
+    // Update with file upload
     @Transactional
-    public MentorApplication updateApplication(Long id, MentorApplication application) {
+    public MentorApplication updateApplication(Long id,
+                                               MentorApplication application,
+                                               MultipartFile cvFile,
+                                               MultipartFile uploadPaperFile) throws IOException {
         Optional<MentorApplication> optionalApp = mentorApplicationRepository.findById(id);
         if (optionalApp.isPresent()) {
             MentorApplication existingApp = optionalApp.get();
-            // Transfer properties but keep ID, creation date and relationships
+
+            // Update CV if new file provided
+            if (cvFile != null && !cvFile.isEmpty()) {
+                // Delete old CV if exists
+                if (existingApp.getCv() != null) {
+                    fileStorageService.deleteFile(existingApp.getCv());
+                }
+                String cvFilename = fileStorageService.storeFile(cvFile);
+                existingApp.setCv(cvFilename);
+            }
+
+            // Update upload paper if new file provided
+            if (uploadPaperFile != null && !uploadPaperFile.isEmpty()) {
+                // Delete old upload paper if exists
+                if (existingApp.getUploadPaper() != null) {
+                    fileStorageService.deleteFile(existingApp.getUploadPaper());
+                }
+                String uploadPaperFilename = fileStorageService.storeFile(uploadPaperFile);
+                existingApp.setUploadPaper(uploadPaperFilename);
+            }
+
+            // Update other fields
             existingApp.setApplicationText(application.getApplicationText());
-            existingApp.setCv(application.getCv());
-            existingApp.setUploadPaper(application.getUploadPaper());
             existingApp.setLinks(application.getLinks());
             existingApp.setHasPreviousExperience(application.isHasPreviousExperience());
             if (application.getStatus() != null) {
@@ -118,13 +150,30 @@ public class MentorApplicationService {
         return null;
     }
 
-    // Delete
+    // Delete with file cleanup
     @Transactional
-    public boolean deleteApplication(Long id) {
-        if (mentorApplicationRepository.existsById(id)) {
+    public boolean deleteApplication(Long id) throws IOException {
+        Optional<MentorApplication> optionalApp = mentorApplicationRepository.findById(id);
+        if (optionalApp.isPresent()) {
+            MentorApplication app = optionalApp.get();
+
+            // Delete associated files
+            if (app.getCv() != null) {
+                fileStorageService.deleteFile(app.getCv());
+            }
+            if (app.getUploadPaper() != null) {
+                fileStorageService.deleteFile(app.getUploadPaper());
+            }
+
+            // Delete the application
             mentorApplicationRepository.deleteById(id);
             return true;
         }
         return false;
+    }
+
+
+    public byte[] downloadFile(String filename) throws IOException {
+        return fileStorageService.loadFile(filename);
     }
 }

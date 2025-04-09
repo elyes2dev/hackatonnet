@@ -2,6 +2,8 @@ package com.esprit.pi.controllers;
 
 import com.esprit.pi.entities.ApplicationStatus;
 import com.esprit.pi.entities.MentorApplication;
+import com.esprit.pi.entities.User;
+import com.esprit.pi.repositories.UserRepository;
 import com.esprit.pi.services.FileStorageService;
 import com.esprit.pi.services.MentorApplicationService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,54 +39,100 @@ public class MentorApplicationController {
 
     @Autowired
     private FileStorageService fileStorageService;
-
+    @Autowired
+    private UserRepository userRepository;
     // Create
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Create a new mentor application with file uploads")
+    @PostMapping
+    @Operation(summary = "Create a new mentor application with file upload")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Application created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data"),
-            @ApiResponse(responseCode = "500", description = "File upload failed")
+            @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            content = @Content(
-                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                    schema = @Schema(type = "object"),
-                    encoding = {
-                            @Encoding(name = "application", contentType = MediaType.APPLICATION_JSON_VALUE),
-                            @Encoding(name = "cvFile", contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE),
-                            @Encoding(name = "uploadPaperFile", contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-                    }
-            )
-    )
     public ResponseEntity<MentorApplication> createApplication(
-            @RequestPart("application") @Parameter(description = "Mentor application data in JSON format") String applicationJson,
-            @RequestPart(value = "cvFile", required = false) @Parameter(description = "CV file (PDF/DOCX)") MultipartFile cvFile,
-            @RequestPart(value = "uploadPaperFile", required = false) @Parameter(description = "Supporting documents file") MultipartFile uploadPaperFile) {
 
+            @Parameter(
+                    description = "Mentor application details",
+                    schema = @Schema(implementation = MentorApplication.class)
+            )
+            @ModelAttribute MentorApplication application,
+            @Parameter(description = "CV file upload", content = @Content(mediaType = "application/pdf"))
+            @RequestParam("cvFile") MultipartFile cvFile,
+
+            @Parameter(description = "Upload paper (optional)", content = @Content(mediaType = "application/pdf"))
+            @RequestParam(value = "uploadPaperFile", required = false) MultipartFile uploadPaperFile) {
         try {
-            // Convert JSON string to MentorApplication object
-            ObjectMapper objectMapper = new ObjectMapper();
-            MentorApplication application = objectMapper.readValue(applicationJson, MentorApplication.class);
-
-            // Handle file uploads
-            if (cvFile != null && !cvFile.isEmpty()) {
-                String cvFilename = fileStorageService.storeFile(cvFile);
-                application.setCv(cvFilename);
+            // Static user assignment
+            User staticUser = userRepository.findById(1L).orElse(null);
+            if (staticUser == null) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // Or throw an error
             }
 
-            if (uploadPaperFile != null && !uploadPaperFile.isEmpty()) {
-                String paperFilename = fileStorageService.storeFile(uploadPaperFile);
-                application.setUploadPaper(paperFilename);
-            }
+            application.setUser(staticUser); // Assuming MentorApplication has a `user` field
 
-            MentorApplication created = applicationService.createApplication(application);
+            MentorApplication created = applicationService.createApplication(application, cvFile, uploadPaperFile);
             return new ResponseEntity<>(created, HttpStatus.CREATED);
-        } catch (JsonProcessingException e) {
-            return ResponseEntity.badRequest().build();
         } catch (IOException e) {
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+    }
+
+    // Update with file upload
+    @PutMapping("/{id}")
+    @Operation(summary = "Update a mentor application with optional file upload")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Application updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Application not found")
+    })
+    public ResponseEntity<MentorApplication> updateApplication(
+            @PathVariable Long id,
+            @ModelAttribute MentorApplication application,
+            @RequestParam(value = "cvFile", required = false) MultipartFile cvFile,
+            @RequestParam(value = "uploadPaperFile", required = false) MultipartFile uploadPaperFile) {
+        try {
+            MentorApplication updated = applicationService.updateApplication(id, application, cvFile, uploadPaperFile);
+            if (updated != null) {
+                return new ResponseEntity<>(updated, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (IOException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // File download endpoints
+    @GetMapping("/{id}/cv")
+    @Operation(summary = "Download CV file")
+    public ResponseEntity<byte[]> downloadCv(@PathVariable Long id) {
+        Optional<MentorApplication> application = applicationService.getApplicationById(id);
+        if (application.isPresent() && application.get().getCv() != null) {
+            try {
+                byte[] fileContent = applicationService.downloadFile(application.get().getCv());
+                return ResponseEntity.ok()
+                        .header("Content-Disposition", "attachment; filename=\"" + application.get().getCv() + "\"")
+                        .body(fileContent);
+            } catch (IOException e) {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @GetMapping("/{id}/upload-paper")
+    @Operation(summary = "Download upload paper file")
+    public ResponseEntity<byte[]> downloadUploadPaper(@PathVariable Long id) {
+        Optional<MentorApplication> application = applicationService.getApplicationById(id);
+        if (application.isPresent() && application.get().getUploadPaper() != null) {
+            try {
+                byte[] fileContent = applicationService.downloadFile(application.get().getUploadPaper());
+                return ResponseEntity.ok()
+                        .header("Content-Disposition", "attachment; filename=\"" + application.get().getUploadPaper() + "\"")
+                        .body(fileContent);
+            } catch (IOException e) {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     // Read
@@ -107,21 +155,7 @@ public class MentorApplicationController {
     }
 
     // Download file
-    @GetMapping("/files/{filename:.+}")
-    @Operation(summary = "Download a file associated with an application")
-    @ApiResponse(responseCode = "200", description = "File downloaded successfully")
-    @ApiResponse(responseCode = "404", description = "File not found")
-    public ResponseEntity<byte[]> downloadFile(@PathVariable String filename) {
-        try {
-            byte[] fileContent = fileStorageService.loadFileAsResource(filename);
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + filename + "\"")
-                    .body(fileContent);
-        } catch (IOException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
+
 
     @GetMapping("/mentor/{mentorId}")
     @Operation(summary = "Get applications by mentor ID")
@@ -144,21 +178,6 @@ public class MentorApplicationController {
         return new ResponseEntity<>(applications, HttpStatus.OK);
     }
 
-    // Update
-    @PutMapping("/{id}")
-    @Operation(summary = "Update an existing mentor application")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Application updated successfully"),
-            @ApiResponse(responseCode = "404", description = "Application not found")
-    })
-    public ResponseEntity<MentorApplication> updateApplication(@PathVariable Long id, @RequestBody MentorApplication application) {
-        MentorApplication updated = applicationService.updateApplication(id, application);
-        if (updated != null) {
-            return new ResponseEntity<>(updated, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
 
     // Update status
     @PatchMapping("/{id}/status")
@@ -185,7 +204,7 @@ public class MentorApplicationController {
             @ApiResponse(responseCode = "204", description = "Application deleted successfully"),
             @ApiResponse(responseCode = "404", description = "Application not found")
     })
-    public ResponseEntity<Void> deleteApplication(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteApplication(@PathVariable Long id) throws IOException {
         boolean deleted = applicationService.deleteApplication(id);
         if (deleted) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);

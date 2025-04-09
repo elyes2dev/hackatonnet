@@ -78,4 +78,17 @@ public class PreviousExperienceService {
         }
         return false;
     }
+
+
+    public boolean deleteExperiencesByApplicationId(Long applicationId) {
+        try {
+            List<PreviousExperience> experiences = getExperiencesByApplicationId(applicationId);
+            for (PreviousExperience exp : experiences) {
+                deleteExperience(exp.getId());
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

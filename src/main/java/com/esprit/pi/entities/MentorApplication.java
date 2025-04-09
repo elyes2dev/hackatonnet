@@ -57,7 +57,8 @@ public class MentorApplication {
     private ApplicationStatus status = ApplicationStatus.PENDING;
 
     @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference // This side will be serialized
+    @JsonManagedReference
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<PreviousExperience> previousExperiences;
 
     @CreationTimestamp

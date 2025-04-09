@@ -116,4 +116,21 @@ public class PreviousExperienceController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
+
+
+    @DeleteMapping("/application/{applicationId}")
+    @Operation(summary = "Delete all experiences for an application")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Experiences deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Application not found")
+    })
+    public ResponseEntity<Void> deleteExperiencesByApplicationId(@PathVariable Long applicationId) {
+        boolean deleted = experienceService.deleteExperiencesByApplicationId(applicationId);
+        if (deleted) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 }

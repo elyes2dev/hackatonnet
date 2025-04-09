@@ -1,6 +1,8 @@
 package com.esprit.pi.controllers;
 
+import com.esprit.pi.entities.Hackathon;
 import com.esprit.pi.entities.ListMentor;
+import com.esprit.pi.entities.User;
 import com.esprit.pi.services.ListMentorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,6 +33,15 @@ public class ListMentorController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     public ResponseEntity<ListMentor> createListMentor(@RequestBody ListMentor listMentor) {
+        // Set static user ID 1 and hackathon ID 1
+        User mentor = new User();
+        mentor.setId(1L);
+        listMentor.setMentor(mentor);
+
+        Hackathon hackathon = new Hackathon();
+        hackathon.setId(1L);
+        listMentor.setHackathon(hackathon);
+
         ListMentor created = listMentorService.createListMentor(listMentor);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
@@ -80,6 +91,15 @@ public class ListMentorController {
         Optional<ListMentor> existingListMentor = listMentorService.getListMentorById(id);
         if (existingListMentor.isPresent()) {
             listMentor.setId(id);
+            // From your backend controller
+            User mentor = new User();
+            mentor.setId(1L);
+            listMentor.setMentor(mentor);
+
+            Hackathon hackathon = new Hackathon();
+            hackathon.setId(1L);
+            listMentor.setHackathon(hackathon);
+            
             ListMentor updated = listMentorService.updateListMentor(listMentor);
             return new ResponseEntity<>(updated, HttpStatus.OK);
         } else {

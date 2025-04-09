@@ -23,8 +23,8 @@ public class MentorEvaluationService {
         }
 
         // Validate rating
-        if (evaluation.getRating() < 1 || evaluation.getRating() > 5) {
-            throw new IllegalArgumentException("Rating must be between 1 and 5");
+        if (evaluation.getRating() < 0 || evaluation.getRating() > 5) {
+            throw new IllegalArgumentException("Rating must be between 0 and 5");
         }
 
         return mentorEvaluationRepository.save(evaluation);
@@ -54,8 +54,8 @@ public class MentorEvaluationService {
     // Update
     public MentorEvaluation updateEvaluation(MentorEvaluation evaluation) {
         // Validate rating
-        if (evaluation.getRating() < 1 || evaluation.getRating() > 5) {
-            throw new IllegalArgumentException("Rating must be between 1 and 5");
+        if (evaluation.getRating() < 0 || evaluation.getRating() > 5) {
+            throw new IllegalArgumentException("Rating must be between 0 and 5");
         }
 
         return mentorEvaluationRepository.save(evaluation);

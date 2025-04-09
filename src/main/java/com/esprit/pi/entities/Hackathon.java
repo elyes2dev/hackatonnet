@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,6 +40,7 @@ public class Hackathon {
 
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
+    @JsonIgnore // 🔥 This breaks the loop from Hackathon → User → Hackathon
     private User createdBy;
 
     @CreationTimestamp

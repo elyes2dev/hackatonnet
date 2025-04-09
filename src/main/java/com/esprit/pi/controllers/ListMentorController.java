@@ -99,7 +99,7 @@ public class ListMentorController {
             Hackathon hackathon = new Hackathon();
             hackathon.setId(1L);
             listMentor.setHackathon(hackathon);
-            
+
             ListMentor updated = listMentorService.updateListMentor(listMentor);
             return new ResponseEntity<>(updated, HttpStatus.OK);
         } else {

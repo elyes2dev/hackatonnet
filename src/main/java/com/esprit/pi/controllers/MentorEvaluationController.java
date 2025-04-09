@@ -1,6 +1,8 @@
 package com.esprit.pi.controllers;
 
 import com.esprit.pi.entities.MentorEvaluation;
+import com.esprit.pi.entities.Team;
+import com.esprit.pi.entities.User;
 import com.esprit.pi.services.MentorEvaluationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -32,6 +34,24 @@ public class MentorEvaluationController {
     })
     public ResponseEntity<?> createEvaluation(@RequestBody MentorEvaluation evaluation) {
         try {
+            // Log received data for debugging
+            System.out.println("Received evaluation with rating: " + evaluation.getRating());
+
+            // Validate rating (0-5)
+            if (evaluation.getRating() < 0 || evaluation.getRating() > 5) {
+                throw new IllegalArgumentException("Rating must be between 0 and 5");
+            }
+
+            // Set static mentor ID 1
+            User mentor = new User();
+            mentor.setId(1L);
+            evaluation.setMentor(mentor);
+
+            // Set static team ID 1
+            Team team = new Team();
+            team.setId(1L);
+            evaluation.setTeam(team);
+
             MentorEvaluation created = evaluationService.createEvaluation(evaluation);
             return new ResponseEntity<>(created, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
@@ -92,6 +112,14 @@ public class MentorEvaluationController {
         if (existingEvaluation.isPresent()) {
             try {
                 evaluation.setId(id);
+                User mentor = new User();
+                mentor.setId(1L);
+                evaluation.setMentor(mentor);
+
+                // Set static team ID 1
+                Team team = new Team();
+                team.setId(1L);
+                evaluation.setTeam(team);
                 MentorEvaluation updated = evaluationService.updateEvaluation(evaluation);
                 return new ResponseEntity<>(updated, HttpStatus.OK);
             } catch (IllegalArgumentException e) {

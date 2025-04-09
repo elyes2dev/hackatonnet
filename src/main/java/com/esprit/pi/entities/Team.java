@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,6 +36,7 @@ public class Team {
     // Relationship with Hackathon (Each team is associated with one hackathon)
     @ManyToOne
     @JoinColumn(name = "hackathon_id", nullable = false)
+    @JsonIgnoreProperties({"teams", "createdBy", "posts", "prizes"}) // 🔥 Only serialize the hackathon ID/title
     private Hackathon hackathon;  // The hackathon this team belongs to
 
 

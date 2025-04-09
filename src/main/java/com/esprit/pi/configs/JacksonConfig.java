@@ -15,6 +15,7 @@ public class JacksonConfig {
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 
+
         // Customize the max nesting depth
         objectMapper.getFactory().setStreamWriteConstraints(StreamWriteConstraints.builder()
                 .maxNestingDepth(20000)  // Set it to a higher value as needed

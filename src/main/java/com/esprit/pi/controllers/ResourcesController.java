@@ -1,10 +1,7 @@
 package com.esprit.pi.controllers;
 
 import com.esprit.pi.dtos.ResourceRequest;
-import com.esprit.pi.entities.ImageModel;
-import com.esprit.pi.entities.Resources;
-import com.esprit.pi.entities.Workshop;
-import com.esprit.pi.entities.skillEnum;
+import com.esprit.pi.entities.*;
 import com.esprit.pi.repositories.IWorkshopRepository;
 import com.esprit.pi.services.FileStorageService;
 import com.esprit.pi.services.IImageModelService;
@@ -28,7 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/workshops/{workshopId}/resources")
+@RequestMapping("/workshopsr")
 public class ResourcesController {
 
     @Autowired
@@ -46,7 +43,7 @@ public class ResourcesController {
     private IImageModelService imageModelService; // You'll need this to validate workshop existence
 
     // Get all resources for a specific workshop
-    @GetMapping
+    @GetMapping("/{workshopId}/resources")
     public ResponseEntity<List<Resources>> getAllWorkshopResources(@PathVariable Long workshopId) {
         if (!workshopRepository.existsById(workshopId)) {
             return ResponseEntity.notFound().build();
@@ -58,7 +55,7 @@ public class ResourcesController {
     }
 
     // Get a specific resource by ID within a workshop
-    @GetMapping("/{resourceId}")
+    @GetMapping("/{workshopId}/resources/{resourceId}")
     public ResponseEntity<Resources> getResourceById(
             @PathVariable Long workshopId,
             @PathVariable Long resourceId) {
@@ -71,7 +68,7 @@ public class ResourcesController {
     }
 
     // Create a new resource for a workshop (with optional files)
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(path = "/{workshopId}/resources", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Resources> createResource(
             @PathVariable Long workshopId,
             @RequestParam("resource") String resourceJson,
@@ -97,7 +94,7 @@ public class ResourcesController {
     }
 
     // Update a resource
-    @PutMapping("/{resourceId}")
+    @PutMapping("/{workshopId}/resources/{resourceId}")
     public ResponseEntity<Resources> updateResource(
             @PathVariable Long workshopId,
             @PathVariable Long resourceId,
@@ -118,7 +115,7 @@ public class ResourcesController {
     }
 
     // Delete a resource
-    @DeleteMapping("/{resourceId}")
+    @DeleteMapping("/{workshopId}/resources/{resourceId}")
     public ResponseEntity<Void> deleteResource(
             @PathVariable Long workshopId,
             @PathVariable Long resourceId) {
@@ -133,7 +130,7 @@ public class ResourcesController {
     }
 
     // Upload images to an existing resource
-    @PostMapping("/{resourceId}/images")
+    @PostMapping("/{workshopId}/resources/{resourceId}/images")
     public ResponseEntity<Resources> uploadImagesToResource(
             @PathVariable Long workshopId,
             @PathVariable Long resourceId,
@@ -154,7 +151,7 @@ public class ResourcesController {
         return ResponseEntity.ok(updatedResource);
     }
 
-    @GetMapping("/{resourceId}/images/{imageId}/download")
+    @GetMapping("/{workshopId}/resources/{resourceId}/images/{imageId}/download")
     public ResponseEntity<org.springframework.core.io.Resource> downloadImage(
             @PathVariable Long resourceId,
             @PathVariable Long imageId) {
@@ -173,6 +170,12 @@ public class ResourcesController {
                         "attachment; filename=\"" + imageModel.getPath() + "\"")
                 .body(resource);
     }
+
+    @GetMapping("/resources")
+    public ResponseEntity<List<Resources>> getAll() {
+        return ResponseEntity.ok(resourcesService.retrieveAllResources());
+    }
+
 
 
 

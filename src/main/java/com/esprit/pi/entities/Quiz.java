@@ -1,8 +1,6 @@
 package com.esprit.pi.entities;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,6 +31,7 @@ public class Quiz {
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions = new ArrayList<>();
 
+    @JsonProperty("isPublished")  // Make sure JSON uses 'isPublished' instead of 'published'
     private boolean isPublished; // Controls if the quiz is visible to users
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)  // Cascade deletion for UserQuizScore
@@ -75,8 +74,10 @@ public class Quiz {
         return isPublished;
     }
 
-    public void setPublished(boolean published) {
-        isPublished = published;
+    // Setter for isPublished
+    @JsonProperty("isPublished")  // Force 'isPublished' to be used in JSON
+    public void setPublished(boolean isPublished) {
+        this.isPublished = isPublished;
     }
 
     public Long getId_quiz() {
@@ -85,6 +86,12 @@ public class Quiz {
 
     public void setId_quiz(Long id_quiz) {
         this.id_quiz = id_quiz;
+    }
+
+
+    @JsonIgnore  // Ignore the 'published' field if it exists
+    public boolean isPublishedDeprecated() {
+        return this.isPublished;
     }
 
 

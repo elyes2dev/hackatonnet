@@ -4,6 +4,7 @@ import com.esprit.pi.entities.MentorEvaluation;
 import com.esprit.pi.entities.Team;
 import com.esprit.pi.entities.User;
 import com.esprit.pi.services.MentorEvaluationService;
+import com.esprit.pi.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -25,6 +26,9 @@ public class MentorEvaluationController {
     @Autowired
     private MentorEvaluationService evaluationService;
 
+
+    @Autowired
+    private UserService userService;
     // Create
     @PostMapping
     @Operation(summary = "Create a new mentor evaluation")
@@ -34,22 +38,19 @@ public class MentorEvaluationController {
     })
     public ResponseEntity<?> createEvaluation(@RequestBody MentorEvaluation evaluation) {
         try {
-            // Log received data for debugging
-            System.out.println("Received evaluation with rating: " + evaluation.getRating());
-
             // Validate rating (0-5)
             if (evaluation.getRating() < 0 || evaluation.getRating() > 5) {
                 throw new IllegalArgumentException("Rating must be between 0 and 5");
             }
 
-            // Set static mentor ID 1
-            User mentor = new User();
-            mentor.setId(1L);
-            evaluation.setMentor(mentor);
+            // Validate mentor exists
+            // Set static mentor and team with ID = 1
+            User mentor = userService.getUserById(1L)
+                    .orElseThrow(() -> new IllegalArgumentException("Mentor with ID 1 not found"));
+            Team team = new Team(); // You can inject a TeamService if needed
+            team.setId(1L); // Minimal setup, assumes team exists in DB
 
-            // Set static team ID 1
-            Team team = new Team();
-            team.setId(1L);
+            evaluation.setMentor(mentor);
             evaluation.setTeam(team);
 
             MentorEvaluation created = evaluationService.createEvaluation(evaluation);
@@ -102,31 +103,34 @@ public class MentorEvaluationController {
 
     // Update
     @PutMapping("/{id}")
-    @Operation(summary = "Update an existing mentor evaluation")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Evaluation updated successfully"),
-            @ApiResponse(responseCode = "404", description = "Evaluation not found")
-    })
     public ResponseEntity<?> updateEvaluation(@PathVariable Long id, @RequestBody MentorEvaluation evaluation) {
-        Optional<MentorEvaluation> existingEvaluation = evaluationService.getEvaluationById(id);
-        if (existingEvaluation.isPresent()) {
-            try {
-                evaluation.setId(id);
-                User mentor = new User();
-                mentor.setId(1L);
-                evaluation.setMentor(mentor);
-
-                // Set static team ID 1
-                Team team = new Team();
-                team.setId(1L);
-                evaluation.setTeam(team);
-                MentorEvaluation updated = evaluationService.updateEvaluation(evaluation);
-                return new ResponseEntity<>(updated, HttpStatus.OK);
-            } catch (IllegalArgumentException e) {
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-            }
-        } else {
+        Optional<MentorEvaluation> existingEvaluationOpt = evaluationService.getEvaluationById(id);
+        if (existingEvaluationOpt.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        try {
+            // Get the existing evaluation
+            MentorEvaluation existingEvaluation = existingEvaluationOpt.get();
+
+            // Update only the fields that should change
+            existingEvaluation.setFeedbackText(evaluation.getFeedbackText());
+            existingEvaluation.setRating(evaluation.getRating());
+
+            // Validate rating
+            if (existingEvaluation.getRating() < 0 || existingEvaluation.getRating() > 5) {
+                throw new IllegalArgumentException("Rating must be between 0 and 5");
+            }
+
+            // Preserve relationships - don't overwrite them
+            // (unless you specifically want to allow changing mentor/team)
+
+            MentorEvaluation updated = evaluationService.updateEvaluation(existingEvaluation);
+            return new ResponseEntity<>(updated, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -146,4 +150,15 @@ public class MentorEvaluationController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
+    // Add a new endpoint to get mentor's current badge level
+    @GetMapping("/mentor/{mentorId}/badge")
+    @Operation(summary = "Get mentor's current badge level")
+    public ResponseEntity<User.BadgeLevel> getMentorBadge(@PathVariable Long mentorId) {
+        Optional<User> mentor = userService.getUserById(mentorId);
+        return mentor.map(user -> new ResponseEntity<>(user.getBadge(), HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+
 }

@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -75,9 +76,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     private BadgeLevel badge = BadgeLevel.JUNIOR_COACH; // Default
 
-    @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "mentor", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = false)
     @JsonIgnore
-    private Set<MentorEvaluation> evaluations;
+    private Set<MentorEvaluation> evaluations = new HashSet<>();
 
 
     // Add a specific reference to mentor application
@@ -94,4 +95,47 @@ public class User {
         HEAD_COACH,
         MASTER_MENTOR
     }
+
+
+    public void calculateMentorPoints() {
+        if (evaluations == null || evaluations.isEmpty()) {
+            this.mentorPoints = 0;
+            this.badge = BadgeLevel.JUNIOR_COACH;
+            return;
+        }
+
+        // Calculate total points based on evaluations
+        int totalPoints = evaluations.stream()
+                .mapToInt(eval -> {
+                    // Base points for being evaluated
+                    int basePoints = 10;
+                    // Bonus points based on rating (1-5 stars)
+                    int ratingBonus = eval.getRating() * 2;
+                    return basePoints + ratingBonus;
+                })
+                .sum();
+
+        this.mentorPoints = totalPoints;
+        updateBadgeLevel();
+    }
+
+    private void updateBadgeLevel() {
+        if (mentorPoints == null) {
+            this.badge = BadgeLevel.JUNIOR_COACH;
+            return;
+        }
+
+        if (mentorPoints >= 20) {
+            this.badge = BadgeLevel.MASTER_MENTOR;
+        } else if (mentorPoints >= 15) {
+            this.badge = BadgeLevel.HEAD_COACH;
+        } else if (mentorPoints >= 10) {
+            this.badge = BadgeLevel.SENIOR_COACH;
+        } else if (mentorPoints >= 5) {
+            this.badge = BadgeLevel.ASSISTANT_COACH;
+        } else {
+            this.badge = BadgeLevel.JUNIOR_COACH;
+        }
+    }
+
 }

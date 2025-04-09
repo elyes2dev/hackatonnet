@@ -1,9 +1,12 @@
 package com.esprit.pi.services;
 
 import com.esprit.pi.entities.MentorEvaluation;
+import com.esprit.pi.entities.User;
 import com.esprit.pi.repositories.MentorEvaluationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.Date;
 import java.util.List;
@@ -15,7 +18,10 @@ public class MentorEvaluationService {
     @Autowired
     private MentorEvaluationRepository mentorEvaluationRepository;
 
+    @Autowired
+    private UserService userService;
     // Create
+    @Transactional
     public MentorEvaluation createEvaluation(MentorEvaluation evaluation) {
         // Set creation date if not already set
         if (evaluation.getCreatedAt() == null) {
@@ -27,7 +33,38 @@ public class MentorEvaluationService {
             throw new IllegalArgumentException("Rating must be between 0 and 5");
         }
 
-        return mentorEvaluationRepository.save(evaluation);
+        MentorEvaluation savedEvaluation = mentorEvaluationRepository.save(evaluation);
+
+        // Update mentor's points and badge
+        if (savedEvaluation.getMentor() != null) {
+            userService.updateUserPointsAndBadge(savedEvaluation.getMentor().getId());
+        }
+
+
+        return savedEvaluation;
+    }
+
+    // Update existing methods to handle points recalculation
+    @Transactional
+    public MentorEvaluation updateEvaluation(MentorEvaluation evaluation) {
+        // Verify the evaluation exists
+        if (evaluation.getId() == null || !mentorEvaluationRepository.existsById(evaluation.getId())) {
+            throw new IllegalArgumentException("Evaluation with ID " + evaluation.getId() + " not found");
+        }
+
+        // Validate rating
+        if (evaluation.getRating() < 0 || evaluation.getRating() > 5) {
+            throw new IllegalArgumentException("Rating must be between 0 and 5");
+        }
+
+        MentorEvaluation savedEvaluation = mentorEvaluationRepository.save(evaluation);
+
+        // Update mentor's points
+        if (savedEvaluation.getMentor() != null) {
+            userService.updateUserPointsAndBadge(savedEvaluation.getMentor().getId());
+        }
+
+        return savedEvaluation;
     }
 
     // Read
@@ -51,15 +88,7 @@ public class MentorEvaluationService {
     public List<MentorEvaluation> getEvaluationsByMinimumRating(int minRating) {
         return mentorEvaluationRepository.findByRatingGreaterThanEqual(minRating);
     }
-    // Update
-    public MentorEvaluation updateEvaluation(MentorEvaluation evaluation) {
-        // Validate rating
-        if (evaluation.getRating() < 0 || evaluation.getRating() > 5) {
-            throw new IllegalArgumentException("Rating must be between 0 and 5");
-        }
 
-        return mentorEvaluationRepository.save(evaluation);
-    }
 
     // Delete
     public void deleteEvaluation(Long id) {

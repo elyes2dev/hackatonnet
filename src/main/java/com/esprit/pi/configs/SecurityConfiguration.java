@@ -37,7 +37,7 @@ public class SecurityConfiguration {
                 .securityMatcher("/api/**", "/auth/**","/**")
                 .csrf(csrf -> csrf.disable())  // Disable CSRF protection
                 .authorizeHttpRequests(request -> {
-                    request.requestMatchers("/api/open/**", "/auth/**","/**").permitAll();  // Allow public access
+                    request.requestMatchers("/api/open/**", "/auth/**","/**","/pi/certificates/download").permitAll();  // Allow public access
                     request.anyRequest().authenticated();  // Require JWT authentication for other endpoints
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -24,7 +24,7 @@ public class QuizCertificateController {
             @RequestParam String quizTitle,
             @RequestParam int score) {
 
-        if (score > 5) {  // Only generate certificate if score is greater than 5
+        if (score > 0) {  // Only generate certificate if score is greater than 5
             ByteArrayInputStream certificateStream = quizCertificateService.generateCertificate(username, quizTitle, score);
 
             HttpHeaders headers = new HttpHeaders();

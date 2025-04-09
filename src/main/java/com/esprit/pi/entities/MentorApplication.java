@@ -7,7 +7,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.Date;
 import java.util.List;
@@ -41,6 +44,10 @@ public class MentorApplication {
     private String uploadPaper;
 
     @ElementCollection
+    @CollectionTable(name = "mentor_application_links",
+            joinColumns = @JoinColumn(name = "mentor_application_id"))
+    @Column(name = "link")
+    @OnDelete(action = OnDeleteAction.CASCADE) // Hibernate specific annotation
     private List<String> links;
 
     private boolean hasPreviousExperience;

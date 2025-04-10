@@ -43,13 +43,13 @@ public class UserService {
         user.setMentorPoints(totalPoints);
 
         // Update badge based on points
-        if (totalPoints >= 20) {
+        if (totalPoints >= 200) {
             user.setBadge(User.BadgeLevel.MASTER_MENTOR);
-        } else if (totalPoints >= 15) {
+        } else if (totalPoints >= 150) {
             user.setBadge(User.BadgeLevel.HEAD_COACH);
-        } else if (totalPoints >= 10) {
+        } else if (totalPoints >= 100) {
             user.setBadge(User.BadgeLevel.SENIOR_COACH);
-        } else if (totalPoints >= 5) {
+        } else if (totalPoints >= 50) {
             user.setBadge(User.BadgeLevel.ASSISTANT_COACH);
         } else {
             user.setBadge(User.BadgeLevel.JUNIOR_COACH);

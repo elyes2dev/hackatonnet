@@ -125,13 +125,13 @@ public class User {
             return;
         }
 
-        if (mentorPoints >= 20) {
+        if (mentorPoints >= 200) {
             this.badge = BadgeLevel.MASTER_MENTOR;
-        } else if (mentorPoints >= 15) {
+        } else if (mentorPoints >= 150) {
             this.badge = BadgeLevel.HEAD_COACH;
-        } else if (mentorPoints >= 10) {
+        } else if (mentorPoints >= 100) {
             this.badge = BadgeLevel.SENIOR_COACH;
-        } else if (mentorPoints >= 5) {
+        } else if (mentorPoints >= 50) {
             this.badge = BadgeLevel.ASSISTANT_COACH;
         } else {
             this.badge = BadgeLevel.JUNIOR_COACH;

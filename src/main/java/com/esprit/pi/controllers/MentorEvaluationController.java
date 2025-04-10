@@ -54,6 +54,10 @@ public class MentorEvaluationController {
             evaluation.setTeam(team);
 
             MentorEvaluation created = evaluationService.createEvaluation(evaluation);
+
+            // Always refresh user with ID 1
+            userService.updateUserPointsAndBadge(1L);
+
             return new ResponseEntity<>(created, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -102,6 +106,7 @@ public class MentorEvaluationController {
     }
 
     // Update
+// Update
     @PutMapping("/{id}")
     public ResponseEntity<?> updateEvaluation(@PathVariable Long id, @RequestBody MentorEvaluation evaluation) {
         Optional<MentorEvaluation> existingEvaluationOpt = evaluationService.getEvaluationById(id);
@@ -126,6 +131,10 @@ public class MentorEvaluationController {
             // (unless you specifically want to allow changing mentor/team)
 
             MentorEvaluation updated = evaluationService.updateEvaluation(existingEvaluation);
+
+            // Always refresh user with ID 1
+            userService.updateUserPointsAndBadge(1L);
+
             return new ResponseEntity<>(updated, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -145,6 +154,10 @@ public class MentorEvaluationController {
         Optional<MentorEvaluation> existingEvaluation = evaluationService.getEvaluationById(id);
         if (existingEvaluation.isPresent()) {
             evaluationService.deleteEvaluation(id);
+
+            // Always refresh user with ID 1
+            userService.updateUserPointsAndBadge(1L);
+
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

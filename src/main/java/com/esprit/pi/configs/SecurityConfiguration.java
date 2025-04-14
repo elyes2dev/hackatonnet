@@ -3,7 +3,7 @@ package com.esprit.pi.configs;
 import com.esprit.pi.repositories.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -13,75 +13,68 @@ import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-    JwtFilter jwtFilter;
-    UserRepository userRepository;
+    private final JwtFilter jwtFilter;
+    private final UserRepository userRepository;
 
     public SecurityConfiguration(JwtFilter jwtFilter, UserRepository userRepository) {
-        // Auto inject dependent beans
         this.jwtFilter = jwtFilter;
         this.userRepository = userRepository;
     }
 
-    // Security Filter Chain for API
     @Bean
-    @Order(1)
-    public SecurityFilterChain basicAuthSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors()
-                .and()
-                .securityMatcher("/api/**", "/auth/**")
-                .csrf(csrf -> csrf.disable())  // Disable CSRF protection
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> {
-                    request.requestMatchers("/api/open/**", "/auth/**").permitAll();  // Allow public access
-                    request.anyRequest().authenticated();  // Require JWT authentication for other endpoints
+                    request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                            .requestMatchers("/", "/error", "/open", "/login",
+                                    "/api/open/**", "/auth/**", "/swagger-ui/**",
+                                    "/swagger-resources", "/swagger-resources/**",
+                                    "/configuration/ui", "/configuration/security",
+                                    "/swagger-ui/**", "/webjars/**", "/swagger-ui.html",
+                                    "/v3/api-docs/**", "/api/teams/**",
+                                    "/api/team-discussions/**", "/api/team-members/**").permitAll()
+                            .requestMatchers("/pi/api/hackathons").permitAll() // Match exact frontend URL
+                            .anyRequest().authenticated();
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
-
-
-    // Security Filter Chain for Web Pages
     @Bean
-    @Order(2)
-    public SecurityFilterChain formSecurityFilterChain(HttpSecurity http) throws Exception {
-        // Form Login for Web Pages
-        return http.authorizeHttpRequests(request -> {
-                    request.requestMatchers("/").permitAll();
-                    request.requestMatchers("/error").permitAll();
-                    request.requestMatchers("/open").permitAll();
-                    request.anyRequest().authenticated();
-                })
-                .formLogin((formLoginConfig) -> formLoginConfig.defaultSuccessUrl("/protected", true))
-                .logout(logoutConfig -> logoutConfig.logoutSuccessUrl("/"))
-                .build();
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.addAllowedOrigin("http://localhost:4200");
+        config.addAllowedOrigin("http://localhost:9100");
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
 
-    // Ignore selected URIs from security checks
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        // Ignore static directories from Security Filter Chain
-        return web -> web.ignoring().requestMatchers("/images/**", "/js/**");
+        return web -> web.ignoring().requestMatchers("/images/**", "/js/**", "/default-ui.css");
     }
 
-    // Custom User Details Service to manage login
     @Bean
     public UserDetailsService userDetailsService() {
-        UserDetailsService userDetailsService = (userName) -> {
-            return userRepository.findByName(userName);
-        };
-        return userDetailsService;
+        return userName -> userRepository.findByName(userName);
     }
 
-    // Password encoder
     @Bean
-    public PasswordEncoder getPasswordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance(); // Upgrade to BCryptPasswordEncoder in production
     }
 }

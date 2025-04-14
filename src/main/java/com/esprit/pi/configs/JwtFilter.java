@@ -101,4 +101,5 @@ public class JwtFilter extends OncePerRequestFilter {
         // Store authentication token for application to use
         SecurityContextHolder.getContext().setAuthentication(authToken);
     }
+
 }

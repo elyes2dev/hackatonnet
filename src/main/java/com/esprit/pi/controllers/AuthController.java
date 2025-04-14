@@ -10,8 +10,14 @@ import com.esprit.pi.services.JwtUtility;
 import com.esprit.pi.services.UserService;
 import com.esprit.pi.services.VerificationService;
 import com.esprit.pi.utilitys.VerificationCodeGenerator;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,21 +55,49 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody User loginUser) {
-        User userOptional = userRepository.findByName(loginUser.getName());
+    @Operation(summary = "Authenticate user and generate JWT token",
+            description = "Provide username and password to receive a JWT token for authentication.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful authentication",
+                    content = @Content(schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials",
+                    content = @Content(schema = @Schema(implementation = Map.class)))
+    })
+    public ResponseEntity<Map<String, String>> login(@RequestBody User loginUser) {
+        User user = userRepository.findByName(loginUser.getName());
 
-
-            Map<String, String> claims = new HashMap<>();
-            claims.put("role", "USER");
-
-            String token = jwtUtility.generateToken(claims, loginUser.getName(), 24 * 60 * 60 * 1000);
-
+        if (user == null) {
             Map<String, String> response = new HashMap<>();
-            response.put("jwtToken", token);
-            return response;
+            response.put("error", "User not found");
+            return ResponseEntity.status(401).body(response);
+        }
 
+        if (loginUser.getPassword() != null && !loginUser.getPassword().equals(user.getPassword())) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Invalid password");
+            return ResponseEntity.status(401).body(response);
+        }
+
+        Map<String, String> claims = new HashMap<>();
+        claims.put("role", "USER");
+
+        String token = jwtUtility.generateToken(claims, loginUser.getName(), 24 * 60 * 60 * 1000);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("jwtToken", token);
+        return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/login")
+    @Operation(summary = "Get login instructions",
+            description = "Returns instructions to use POST /login instead.")
+    @ApiResponse(responseCode = "405", description = "Method not allowed",
+            content = @Content(schema = @Schema(implementation = Map.class)))
+    public ResponseEntity<Map<String, String>> getLogin() {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Use POST /login with username and password to authenticate");
+        return ResponseEntity.status(405).body(response);
+    }
     @PostMapping("/reset_password")
     public Map<String, String> resetPassword(@RequestBody String email){
 

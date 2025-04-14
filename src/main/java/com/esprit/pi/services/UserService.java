@@ -90,4 +90,5 @@ public class UserService implements IUserService {
         PasswordResetToken tokenObj = passwordResetTokenRepository.findByToken(token);
         return userRepository.findById(tokenObj.getUser().getId()).orElse(null);
     }
+
 }

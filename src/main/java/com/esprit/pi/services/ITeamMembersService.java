@@ -7,7 +7,8 @@ import java.util.List;
 public interface ITeamMembersService {
     List<TeamMembers> displayTeamMembers();
     TeamMembers addTeamMember(TeamMembers teamMembers);
-    void deleteTeamMember(long id);
-    TeamMembers updateTeamMember(TeamMembers teamMembers);
-    TeamMembers findTeamMemberById(long id);
+    void deleteTeamMember(Long id);
+    TeamMembers updateTeamMember(TeamMembers teamMember);
+    TeamMembers findTeamMemberById(Long id);
+    List<TeamMembers> findMembersByTeamId(Long teamId);
 }

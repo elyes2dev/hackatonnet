@@ -1,7 +1,7 @@
 package com.esprit.pi.services;
 
-import com.esprit.pi.repositories.TeamMembersRepository;
 import com.esprit.pi.entities.TeamMembers;
+import com.esprit.pi.repositories.TeamMembersRepository;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,17 +30,26 @@ public class TeamMembersService implements ITeamMembersService {
     }
 
     @Override
-    public void deleteTeamMember(long id) {
+    public void deleteTeamMember(Long id) {
         teamMembersRepository.deleteById(id);
     }
 
     @Override
     public TeamMembers updateTeamMember(TeamMembers teamMember) {
+        if (teamMember.getId() == null) {
+            throw new RuntimeException("TeamMember ID cannot be null for update operation");
+        }
         return teamMembersRepository.save(teamMember);
     }
 
     @Override
-    public TeamMembers findTeamMemberById(long id) {
-        return teamMembersRepository.findById(id).orElseThrow(() -> new RuntimeException("TeamMember not found"));
+    public TeamMembers findTeamMemberById(Long id) {
+        return teamMembersRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("TeamMember not found with ID: " + id));
+    }
+
+    @Override
+    public List<TeamMembers> findMembersByTeamId(Long teamId) {
+        return teamMembersRepository.findByTeamId(teamId);
     }
 }

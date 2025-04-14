@@ -1,19 +1,15 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.jdbc.Work;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
 
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -25,14 +21,8 @@ public class User implements UserDetails {
 
     private String name;
     private String lastname;
-    @Getter
-    @Setter
     private String email;
-    @Getter
-    @Setter
     private String username;
-    @Getter
-    @Setter
     private String password;
 
     @Temporal(TemporalType.DATE)
@@ -45,15 +35,13 @@ public class User implements UserDetails {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
-    @Getter
-    @Setter
     @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
@@ -61,32 +49,31 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
-    private Set<Skill> skills;
+    private Set<Skill> skills = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Workshop> workshops = new ArrayList<>(); // Fixed initialization
-
+    private List<Workshop> workshops = new ArrayList<>();
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Hackathon> hackathons;  // This adds the relationship to Hackathons
+    private List<Hackathon> hackathons = new ArrayList<>();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private SponsorApplication sponsorApplication; // One-to-One Relationship
+    private SponsorApplication sponsorApplication;
 
-    // Many-to-many relationship with Team through TeamMembers
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TeamMembers> teamMembers;
-  
+    @JsonIgnore // Prevents serialization of teamMembers
+    private List<TeamMembers> teamMembers = new ArrayList<>();
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserQuizScore> userQuizScores;  // List of quiz scores for the user
+    private List<UserQuizScore> userQuizScores = new ArrayList<>();
 
     private int monitorPoints = 0;
 
     @Enumerated(EnumType.STRING)
-    private BadgeLevel badge = BadgeLevel.JUNIOR_COACH; // Default
+    private BadgeLevel badge = BadgeLevel.JUNIOR_COACH;
 
     @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<MonitorEvaluation> evaluations;
+    private Set<MonitorEvaluation> evaluations = new HashSet<>();
 
     public enum BadgeLevel {
         JUNIOR_COACH,
@@ -96,24 +83,52 @@ public class User implements UserDetails {
         MASTER_MENTOR
     }
 
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
     }
-  
-      public List<UserQuizScore> getUserQuizScores() {
-        return userQuizScores;
-    }
 
-    public void setUserQuizScores(List<UserQuizScore> userQuizScores) {
-        this.userQuizScores = userQuizScores;
-    }
-  
-    public List<Workshop> getWorkshops() {
-        return workshops;
-    }
-
-    public void setWorkshops(List<Workshop> workshops) {
-        this.workshops = workshops;
-    }
+    // Getters and Setters (unchanged)
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getLastname() { return lastname; }
+    public void setLastname(String lastname) { this.lastname = lastname; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+    public Date getBirthdate() { return birthdate; }
+    public void setBirthdate(Date birthdate) { this.birthdate = birthdate; }
+    public String getPicture() { return picture; }
+    public void setPicture(String picture) { this.picture = picture; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public Integer getScore() { return score; }
+    public void setScore(Integer score) { this.score = score; }
+    public Date getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
+    public Set<Role> getRoles() { return roles; }
+    public void setRoles(Set<Role> roles) { this.roles = roles; }
+    public Set<Skill> getSkills() { return skills; }
+    public void setSkills(Set<Skill> skills) { this.skills = skills; }
+    public List<Workshop> getWorkshops() { return workshops; }
+    public void setWorkshops(List<Workshop> workshops) { this.workshops = workshops; }
+    public List<Hackathon> getHackathons() { return hackathons; }
+    public void setHackathons(List<Hackathon> hackathons) { this.hackathons = hackathons; }
+    public SponsorApplication getSponsorApplication() { return sponsorApplication; }
+    public void setSponsorApplication(SponsorApplication sponsorApplication) { this.sponsorApplication = sponsorApplication; }
+    public List<TeamMembers> getTeamMembers() { return teamMembers; }
+    public void setTeamMembers(List<TeamMembers> teamMembers) { this.teamMembers = teamMembers; }
+    public List<UserQuizScore> getUserQuizScores() { return userQuizScores; }
+    public void setUserQuizScores(List<UserQuizScore> userQuizScores) { this.userQuizScores = userQuizScores; }
+    public int getMonitorPoints() { return monitorPoints; }
+    public void setMonitorPoints(int monitorPoints) { this.monitorPoints = monitorPoints; }
+    public BadgeLevel getBadge() { return badge; }
+    public void setBadge(BadgeLevel badge) { this.badge = badge; }
+    public Set<MonitorEvaluation> getEvaluations() { return evaluations; }
+    public void setEvaluations(Set<MonitorEvaluation> evaluations) { this.evaluations = evaluations; }
+}

@@ -1,5 +1,7 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,19 +21,24 @@ public class ProjectEvaluation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "project_id", referencedColumnName = "id", nullable = false)
-    private TeamSubmission teamSubmission;  // Foreign key to TeamSubmission (Many-to-One relationship)
+    @JsonBackReference
+    private TeamSubmission teamSubmission;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "evaluator_id", referencedColumnName = "id", nullable = false)
-    private User evaluator;  // Foreign key to User (Many-to-One relationship)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Permet la désérialisation mais pas la sérialisation
+    private User evaluator;
 
-    private Integer score;  // Evaluation score
-
-    private String feedback;  // Feedback from evaluator
+    private Integer score;
+    private String feedback;
 
     @Temporal(TemporalType.TIMESTAMP)
-    private Date evaluationDate;  // Date of the evaluation
+    private Date evaluationDate;
 
+    // Getters et setters...
+    public String getProjectName() {
+        return teamSubmission != null ? teamSubmission.getProjectName() : null;
+    }
 }

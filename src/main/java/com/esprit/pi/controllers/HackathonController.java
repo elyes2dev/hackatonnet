@@ -12,10 +12,12 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/hackathons")
 public class HackathonController {
     @Autowired
     IHackathonService hackathonService;
+
 
     @PostMapping("/create-hackathon")
     public ResponseEntity<?> createHackathon(@RequestBody Hackathon hackathon) {

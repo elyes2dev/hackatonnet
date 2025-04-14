@@ -1,7 +1,6 @@
 package com.esprit.pi.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,15 +9,14 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.util.*;
+
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Post implements Serializable {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,28 +24,54 @@ public class Post implements Serializable {
     @JsonProperty("title")
     private String title;
 
-    @JsonProperty("logo")
-    private String logo;
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
+    @ElementCollection
+    private List<String> images;
 
     @ManyToOne
-    @JoinColumn(name = "posted_by", nullable = false)
-    @JsonProperty("postedBy")
+    @JoinColumn(name = "posted_by")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = false)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private User postedBy;
 
     @ManyToOne
-    @JoinColumn(name = "hackathon_id", nullable = false)
-    @JsonProperty("hackathon")
+    @JoinColumn(name = "hackathon_id")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = false)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private Hackathon hackathon;
+
+    @ManyToMany
+    @JoinTable(
+            name = "post_likes",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> likes = new HashSet<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Comment> comments = new ArrayList<>();
 
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     @JsonProperty("createdAt")
     private Date createdAt;
 
-    public Hackathon getHackathon() {
-        return hackathon;
+    @Temporal(TemporalType.TIMESTAMP)
+    @JsonProperty("updatedAt")
+    private Date updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = new Date();
     }
-    public void setHackathon(Hackathon hackathon) {
-        this.hackathon = hackathon;
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = new Date();
     }
 }

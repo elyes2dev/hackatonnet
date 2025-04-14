@@ -21,9 +21,23 @@ public class HackathonService implements IHackathonService{
 
     @Override
     public Hackathon updateHackathon(Long id, Hackathon hackathon) {
-        return hackathonRepository.save(hackathon);
-    }
+        // First find the existing hackathon
+        Hackathon existingHackathon = hackathonRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Hackathon not found with id: " + id));
 
+        // Update the existing hackathon with new values
+        existingHackathon.setTitle(hackathon.getTitle());
+        existingHackathon.setLocation(hackathon.getLocation());
+        existingHackathon.setLogo(hackathon.getLogo());
+        existingHackathon.setMaxMembers(hackathon.getMaxMembers());
+        existingHackathon.setIsOnline(hackathon.getIsOnline());
+        existingHackathon.setDescription(hackathon.getDescription());
+        existingHackathon.setStartDate(hackathon.getStartDate());
+        existingHackathon.setEndDate(hackathon.getEndDate());
+
+        // Don't update createdBy or createdAt
+        return hackathonRepository.save(existingHackathon);
+    }
     @Override
     public void deleteHackathon(Long id) {
         hackathonRepository.deleteById(id);

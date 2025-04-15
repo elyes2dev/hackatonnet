@@ -1,10 +1,14 @@
 package com.esprit.pi.entities;
 
+import jakarta.annotation.Resource;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.w3c.dom.DocumentType;
+
+import java.lang.reflect.Type;
 
 
 @Entity
@@ -24,4 +28,6 @@ public class Document {
 
     @ManyToOne
     private Resources resource;
-}
+
+        // Getters and setters
+    }

@@ -1,6 +1,10 @@
 package com.esprit.pi.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -50,6 +54,8 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+  //  @JsonIgnore  // Prevents recursion when serializing the Role entity
+    @JsonIgnoreProperties("users")  // Ignore the 'users' field in Role to prevent recursion
     private Set<Role> roles = new HashSet<>();
 
 
@@ -61,6 +67,8 @@ public class User implements UserDetails {
     )
     private Set<Skill> skills = new HashSet<>();
 
+
+    @JsonIgnore  // This will prevent the workshops field from being serialized
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Workshop> workshops = new ArrayList<>(); // Fixed initialization
 
@@ -74,6 +82,10 @@ public class User implements UserDetails {
     // Many-to-many relationship with Team through TeamMembers
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamMembers> teamMembers;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties({"user", "quiz"}) // Avoid circular references and unnecessary data
+    private List<UserQuizScore> userQuizScores;  // List of quiz scores for the user
 
     private int monitorPoints = 0;
 
@@ -97,4 +109,83 @@ public class User implements UserDetails {
         return List.of();
     }
 
+      public List<UserQuizScore> getUserQuizScores() {
+        return userQuizScores;
+    }
+
+    public void setUserQuizScores(List<UserQuizScore> userQuizScores) {
+        this.userQuizScores = userQuizScores;
+    }
+
+    public List<Workshop> getWorkshops() {
+        return workshops;
+    }
+
+    public void setWorkshops(List<Workshop> workshops) {
+        this.workshops = workshops;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Date getBirthdate() {
+        return birthdate;
+    }
+
+    public void setBirthdate(Date birthdate) {
+        this.birthdate = birthdate;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
 }

@@ -11,8 +11,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.esprit.pi.entities.MentorEvaluation;
+import com.esprit.pi.repositories.MentorEvaluationRepository;
+import org.springframework.transaction.annotation.Transactional;
+
+
 
 import java.util.List;
+import java.util.HashSet;
+
 import java.util.Optional;
 
 @Service
@@ -106,5 +113,45 @@ public class UserService implements IUserService {
     public User getUserByPasswordResetToken(String token) {
         PasswordResetToken tokenObj = passwordResetTokenRepository.findByToken(token);
         return userRepository.findById(tokenObj.getUser().getId()).orElse(null);
+    }
+
+    @Autowired
+    private MentorEvaluationRepository mentorEvaluationRepository;
+    @Transactional
+    public User updateUserPointsAndBadge(Long userId) {
+        // Get a fresh entity from the database
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+        // Get all evaluations for this user directly from the repository
+        List<MentorEvaluation> evaluations = mentorEvaluationRepository.findByMentorId(userId);
+
+        // Calculate points based on these evaluations - don't set the evaluations property
+        int totalPoints = evaluations.stream()
+                .mapToInt(eval -> {
+                    int basePoints = 10;
+                    int ratingBonus = eval.getRating() * 2;
+                    return basePoints + ratingBonus;
+                })
+                .sum();
+
+        // Set the mentor points and update badge
+        user.setMentorPoints(totalPoints);
+
+        // Update badge based on points
+        if (totalPoints >= 200) {
+            user.setBadge(User.BadgeLevel.MASTER_MENTOR);
+        } else if (totalPoints >= 150) {
+            user.setBadge(User.BadgeLevel.HEAD_COACH);
+        } else if (totalPoints >= 100) {
+            user.setBadge(User.BadgeLevel.SENIOR_COACH);
+        } else if (totalPoints >= 50) {
+            user.setBadge(User.BadgeLevel.ASSISTANT_COACH);
+        } else {
+            user.setBadge(User.BadgeLevel.JUNIOR_COACH);
+        }
+
+        // Save and return
+        return userRepository.save(user);
     }
 }

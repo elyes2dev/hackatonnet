@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,6 +17,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
+
 
 @Getter
 @Setter
@@ -97,8 +99,17 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private BadgeLevel badge = BadgeLevel.JUNIOR_COACH; // Default
 
-    @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<MonitorEvaluation> evaluations;
+    @OneToMany(mappedBy = "mentor", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = false)
+    @JsonIgnore
+    private Set<MentorEvaluation> evaluations = new HashSet<>();
+
+
+    // Add a specific reference to mentor application
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private MentorApplication mentorApplication;
+
+
 
     public enum BadgeLevel {
         JUNIOR_COACH,
@@ -192,5 +203,47 @@ public class User implements UserDetails {
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
+    }
+
+
+    public void calculateMentorPoints() {
+        if (evaluations == null || evaluations.isEmpty()) {
+            this.mentorPoints = 0;
+            this.badge = BadgeLevel.JUNIOR_COACH;
+            return;
+        }
+
+        // Calculate total points based on evaluations
+        int totalPoints = evaluations.stream()
+                .mapToInt(eval -> {
+                    // Base points for being evaluated
+                    int basePoints = 10;
+                    // Bonus points based on rating (1-5 stars)
+                    int ratingBonus = eval.getRating() * 2;
+                    return basePoints + ratingBonus;
+                })
+                .sum();
+
+        this.mentorPoints = totalPoints;
+        updateBadgeLevel();
+    }
+
+    private void updateBadgeLevel() {
+        if (mentorPoints == null) {
+            this.badge = BadgeLevel.JUNIOR_COACH;
+            return;
+        }
+
+        if (mentorPoints >= 200) {
+            this.badge = BadgeLevel.MASTER_MENTOR;
+        } else if (mentorPoints >= 150) {
+            this.badge = BadgeLevel.HEAD_COACH;
+        } else if (mentorPoints >= 100) {
+            this.badge = BadgeLevel.SENIOR_COACH;
+        } else if (mentorPoints >= 50) {
+            this.badge = BadgeLevel.ASSISTANT_COACH;
+        } else {
+            this.badge = BadgeLevel.JUNIOR_COACH;
+        }
     }
 }

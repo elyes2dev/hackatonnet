@@ -8,6 +8,8 @@ import com.esprit.pi.services.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.esprit.pi.services.UserService;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -49,5 +51,11 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+
+    @GetMapping("/{id}/refresh-points")
+    public User refreshUserBadge(@PathVariable Long id) {
+        return userService.updateUserPointsAndBadge(id);
     }
 }

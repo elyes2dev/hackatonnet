@@ -93,8 +93,10 @@ public class WorkshopController {
 
 
     @GetMapping("/{id}")
-    public Optional<Workshop> getWorkshopById(@PathVariable Long id) {
-        return workshopService.findById(id);
+    public ResponseEntity<Workshop> getWorkshopById(@PathVariable Long id) {
+        return workshopService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping

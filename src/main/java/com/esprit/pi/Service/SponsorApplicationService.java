@@ -13,11 +13,14 @@ import com.esprit.pi.entities.User;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -37,6 +40,11 @@ public class SponsorApplicationService implements ISponsorApplicationService{
     SponsorNotificationService sponsorNotificationService;
     @Autowired
     ISponsorRewardRepository sponsorRewardRepository;
+    @Autowired
+    OCRService ocrService;
+    @Autowired
+    CompanyVerifier companyVerifier;
+
 
 
     static final int EXPIRATION_MINUTES = 5; // 5 minutes for testing
@@ -66,6 +74,49 @@ public class SponsorApplicationService implements ISponsorApplicationService{
 
         return savedApp;
     }
+
+    public ResponseEntity<Map<String, String>> aiVerifyApplication(int applicationId) {
+        SponsorApplication application = getApplicationById(applicationId);
+        String documentPath = "uploads/" + application.getDocumentPath();
+
+        String extractedText = ocrService.extractTextFromFile(documentPath);
+        System.out.println("🔍 Extracted from document: \n" + extractedText);
+
+        if (extractedText == null || extractedText.isEmpty()) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "❌ Could not read text from the document.");
+            return ResponseEntity.status(500).body(response);
+        }
+
+        String detectedCompany = null;
+        for (String line : extractedText.split("\\r?\\n")) {
+            if (line.toLowerCase().contains("company name")) {
+                detectedCompany = line.split(":")[1].trim();
+                break;
+            }
+        }
+
+        if (detectedCompany == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "❌ Could not detect the company name in the document.");
+            return ResponseEntity.status(404).body(response);
+        }
+
+        boolean isValid = companyVerifier.verifyCompany(detectedCompany);
+        if (!isValid) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "❌ Company not found in official registries: " + detectedCompany);
+            return ResponseEntity.status(404).body(response);
+        }
+
+        approveApplication(applicationId);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "✅ Company verified and application auto-approved for: " + detectedCompany);
+        return ResponseEntity.ok(response);
+    }
+
+
 
 
     public List<SponsorApplication> getAllApplications() {

@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -51,6 +52,7 @@ public class Hackathon {
 
 
     @OneToMany(mappedBy = "hackathon", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference // Prevent infinite recursion when serializing
     private List<Prize> prizes; // One Hackathon -> Multiple Prizes
 
     // Relationship with Team (One hackathon can have many teams)

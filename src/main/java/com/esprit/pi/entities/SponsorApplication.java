@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,7 +19,8 @@ public class SponsorApplication {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
+    @JsonBackReference // Prevents infinite recursion
     private User user; // The user who applied
 
     private String companyName;
@@ -30,7 +32,9 @@ public class SponsorApplication {
     @Column(nullable = false, unique = true)
     private int registrationNumber; // Business registration number
 
-    private String websiteUrl; // Optional
+    private String websiteUrl;
+
+    private boolean notified = false;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

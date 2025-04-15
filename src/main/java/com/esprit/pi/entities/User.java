@@ -75,10 +75,14 @@ public class User implements UserDetails {
 
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Hackathon> hackathons;  // This adds the relationship to Hackathons
+    private List<Hackathon.Hackathon> hackathons;  // This adds the relationship to Hackathons
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference // Manages forward serialization
     private SponsorApplication sponsorApplication; // One-to-One Relationship
+
+    @OneToOne(mappedBy = "sponsor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private SponsorReward sponsorReward;
 
     // Many-to-many relationship with Team through TeamMembers
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

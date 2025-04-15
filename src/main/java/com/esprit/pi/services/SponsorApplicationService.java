@@ -1,11 +1,11 @@
-package com.esprit.pi.Service;
+package com.esprit.pi.services;
 
-import com.esprit.pi.DTO.SponsorApplicationDTO;
-import com.esprit.pi.DTO.UserDTO;
-import com.esprit.pi.Repository.IRoleRepository;
-import com.esprit.pi.Repository.ISponsorApplicationRepository;
-import com.esprit.pi.Repository.ISponsorRewardRepository;
-import com.esprit.pi.Repository.IUserRepository;
+import com.esprit.pi.dtos.SponsorApplicationDTO;
+import com.esprit.pi.dtos.UserDTO;
+import com.esprit.pi.repositories.IRoleRepository;
+import com.esprit.pi.repositories.ISponsorApplicationRepository;
+import com.esprit.pi.repositories.ISponsorRewardRepository;
+import com.esprit.pi.repositories.IUserRepository;
 import com.esprit.pi.entities.ApplicationStatus;
 import com.esprit.pi.entities.Role;
 import com.esprit.pi.entities.SponsorApplication;

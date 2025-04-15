@@ -1,4 +1,4 @@
-package com.esprit.pi.DTO;
+package com.esprit.pi.dtos;
 
 import com.esprit.pi.entities.SponsorReward;
 import lombok.AllArgsConstructor;

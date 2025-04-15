@@ -1,6 +1,6 @@
-package com.esprit.pi.Controller;
+package com.esprit.pi.controllers;
 
-import com.esprit.pi.Service.SponsorNotificationService;
+import com.esprit.pi.services.SponsorNotificationService;
 import com.esprit.pi.entities.SponsorNotification;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

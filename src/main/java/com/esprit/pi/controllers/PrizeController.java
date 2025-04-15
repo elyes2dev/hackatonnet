@@ -1,10 +1,9 @@
-package com.esprit.pi.Controller;
+package com.esprit.pi.controllers;
 
-import com.esprit.pi.DTO.PrizeDTO;
-import com.esprit.pi.DTO.SponsorInfoDTO;
-import com.esprit.pi.Service.IPrizeService;
+import com.esprit.pi.dtos.PrizeDTO;
+import com.esprit.pi.dtos.SponsorInfoDTO;
+import com.esprit.pi.services.IPrizeService;
 import com.esprit.pi.entities.Prize;
-import com.esprit.pi.entities.User;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

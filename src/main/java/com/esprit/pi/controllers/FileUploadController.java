@@ -1,4 +1,4 @@
-package com.esprit.pi.Controller;
+package com.esprit.pi.controllers;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;

@@ -1,4 +1,4 @@
-package com.esprit.pi.DTO;
+package com.esprit.pi.dtos;
 
 import com.esprit.pi.entities.ApplicationStatus;
 import com.esprit.pi.entities.Prize;

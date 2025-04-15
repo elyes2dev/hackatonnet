@@ -1,9 +1,9 @@
-package com.esprit.pi.Service;
+package com.esprit.pi.services;
 
-import com.esprit.pi.DTO.SponsorInfoDTO;
-import com.esprit.pi.Repository.ISponsorApplicationRepository;
-import com.esprit.pi.Repository.ISponsorRewardRepository;
-import com.esprit.pi.Repository.IUserRepository;
+import com.esprit.pi.dtos.SponsorInfoDTO;
+import com.esprit.pi.repositories.ISponsorApplicationRepository;
+import com.esprit.pi.repositories.ISponsorRewardRepository;
+import com.esprit.pi.repositories.IUserRepository;
 import com.esprit.pi.entities.SponsorApplication;
 import com.esprit.pi.entities.SponsorReward;
 import com.esprit.pi.entities.User;

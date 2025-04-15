@@ -1,10 +1,10 @@
-package com.esprit.pi.Service;
+package com.esprit.pi.services;
 
-import com.esprit.pi.DTO.HackathonDTO;
-import com.esprit.pi.DTO.PrizeDTO;
-import com.esprit.pi.DTO.SponsorInfoDTO;
-import com.esprit.pi.DTO.UserDTO;
-import com.esprit.pi.Repository.*;
+import com.esprit.pi.dtos.HackathonDTO;
+import com.esprit.pi.dtos.PrizeDTO;
+import com.esprit.pi.dtos.SponsorInfoDTO;
+import com.esprit.pi.dtos.UserDTO;
+import com.esprit.pi.repositories.*;
 import com.esprit.pi.entities.*;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

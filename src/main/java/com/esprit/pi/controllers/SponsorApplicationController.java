@@ -1,8 +1,8 @@
-package com.esprit.pi.Controller;
+package com.esprit.pi.controllers;
 
 
-import com.esprit.pi.DTO.SponsorApplicationDTO;
-import com.esprit.pi.Service.ISponsorApplicationService;
+import com.esprit.pi.dtos.SponsorApplicationDTO;
+import com.esprit.pi.services.ISponsorApplicationService;
 import com.esprit.pi.entities.SponsorApplication;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

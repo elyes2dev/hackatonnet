@@ -1,4 +1,4 @@
-package com.esprit.pi.Repository;
+package com.esprit.pi.repositories;
 
 import com.esprit.pi.entities.SponsorReward;
 import org.springframework.data.jpa.repository.JpaRepository;

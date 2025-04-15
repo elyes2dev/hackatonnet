@@ -1,6 +1,6 @@
-package com.esprit.pi.Service;
+package com.esprit.pi.services;
 
-import com.esprit.pi.DTO.SponsorApplicationDTO;
+import com.esprit.pi.dtos.SponsorApplicationDTO;
 import com.esprit.pi.entities.SponsorApplication;
 
 import java.util.List;

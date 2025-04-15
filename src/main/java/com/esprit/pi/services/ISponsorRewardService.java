@@ -1,6 +1,6 @@
-package com.esprit.pi.Service;
+package com.esprit.pi.services;
 
-import com.esprit.pi.DTO.SponsorInfoDTO;
+import com.esprit.pi.dtos.SponsorInfoDTO;
 import com.esprit.pi.entities.SponsorReward;
 import com.esprit.pi.entities.User;
 

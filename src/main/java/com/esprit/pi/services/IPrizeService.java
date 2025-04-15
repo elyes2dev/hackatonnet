@@ -1,7 +1,7 @@
-package com.esprit.pi.Service;
+package com.esprit.pi.services;
 
-import com.esprit.pi.DTO.PrizeDTO;
-import com.esprit.pi.DTO.SponsorInfoDTO;
+import com.esprit.pi.dtos.PrizeDTO;
+import com.esprit.pi.dtos.SponsorInfoDTO;
 import com.esprit.pi.entities.Hackathon;
 import com.esprit.pi.entities.Prize;
 import com.esprit.pi.entities.SponsorReward;

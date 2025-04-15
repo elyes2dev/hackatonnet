@@ -1,4 +1,4 @@
-package com.esprit.pi.Service;
+package com.esprit.pi.services;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

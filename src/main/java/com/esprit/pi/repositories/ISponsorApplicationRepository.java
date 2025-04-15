@@ -1,4 +1,4 @@
-package com.esprit.pi.Repository;
+package com.esprit.pi.repositories;
 
 import com.esprit.pi.entities.ApplicationStatus;
 import com.esprit.pi.entities.SponsorApplication;

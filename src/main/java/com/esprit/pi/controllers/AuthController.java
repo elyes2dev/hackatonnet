@@ -1,16 +1,13 @@
 package com.esprit.pi.controllers;
 
 import com.esprit.pi.dtos.PasswordDto;
-import com.esprit.pi.entities.PasswordResetToken;
 import com.esprit.pi.entities.Role;
 import com.esprit.pi.entities.User;
-import com.esprit.pi.repositories.PasswordResetTokenRepository;
 import com.esprit.pi.repositories.UserRepository;
 import com.esprit.pi.services.EmailService;
 import com.esprit.pi.services.JwtUtility;
 import com.esprit.pi.services.UserService;
 import com.esprit.pi.services.VerificationService;
-import com.esprit.pi.utilitys.VerificationCodeGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;

@@ -1,4 +1,4 @@
-package com.esprit.pi.utilitys;
+package com.esprit.pi.utility;
 
 import java.security.SecureRandom;
 

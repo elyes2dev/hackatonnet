@@ -1,7 +1,7 @@
 package com.esprit.pi;
 
 import com.esprit.pi.services.EmailService;
-import com.esprit.pi.utilitys.VerificationCodeGenerator;
+import com.esprit.pi.utility.VerificationCodeGenerator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

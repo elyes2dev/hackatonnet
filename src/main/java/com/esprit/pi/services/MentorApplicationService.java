@@ -8,6 +8,7 @@ import com.esprit.pi.repositories.MentorApplicationRepository;
 import com.esprit.pi.repositories.PreviousExperienceRepository;
 import com.esprit.pi.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,7 +25,6 @@ public class MentorApplicationService {
 
     @Autowired
     private PreviousExperienceRepository previousExperienceRepository;
-
 
     @Autowired
     private UserRepository userRepository;
@@ -65,6 +65,7 @@ public class MentorApplicationService {
 
         return mentorApplicationRepository.save(application);
     }
+
     // Read
     public List<MentorApplication> getAllApplications() {
         return mentorApplicationRepository.findAll();
@@ -98,20 +99,16 @@ public class MentorApplicationService {
 
             // Update CV if new file provided
             if (cvFile != null && !cvFile.isEmpty()) {
-                // Delete old CV if exists
-                if (existingApp.getCv() != null) {
-                    fileStorageService.deleteFile(existingApp.getCv());
-                }
+                // We don't need to delete the old file since the storeFile method
+                // will replace existing files with the same name
                 String cvFilename = fileStorageService.storeFile(cvFile);
                 existingApp.setCv(cvFilename);
             }
 
             // Update upload paper if new file provided
             if (uploadPaperFile != null && !uploadPaperFile.isEmpty()) {
-                // Delete old upload paper if exists
-                if (existingApp.getUploadPaper() != null) {
-                    fileStorageService.deleteFile(existingApp.getUploadPaper());
-                }
+                // We don't need to delete the old file since the storeFile method
+                // will replace existing files with the same name
                 String uploadPaperFilename = fileStorageService.storeFile(uploadPaperFile);
                 existingApp.setUploadPaper(uploadPaperFilename);
             }
@@ -129,7 +126,6 @@ public class MentorApplicationService {
         return null;
     }
 
-    // Update status specifically
     // Update status specifically with automatic mentor activation
     @Transactional
     public MentorApplication updateApplicationStatus(Long id, ApplicationStatus newStatus) {
@@ -141,7 +137,7 @@ public class MentorApplicationService {
             // If the application is approved, update the user to be a mentor
             if (newStatus == ApplicationStatus.APPROVED) {
                 User user = app.getUser();
-               // user.setMentor(true);************ to do when merged with user
+                // user.setMentor(true);************ to do when merged with user
                 userRepository.save(user);
             }
 
@@ -150,20 +146,15 @@ public class MentorApplicationService {
         return null;
     }
 
-    // Delete with file cleanup
+    // Delete
     @Transactional
     public boolean deleteApplication(Long id) throws IOException {
         Optional<MentorApplication> optionalApp = mentorApplicationRepository.findById(id);
         if (optionalApp.isPresent()) {
             MentorApplication app = optionalApp.get();
 
-            // Delete associated files
-            if (app.getCv() != null) {
-                fileStorageService.deleteFile(app.getCv());
-            }
-            if (app.getUploadPaper() != null) {
-                fileStorageService.deleteFile(app.getUploadPaper());
-            }
+            // No file deletion needed since we're just deleting the application record
+            // The file management is handled separately
 
             // Delete the application
             mentorApplicationRepository.deleteById(id);
@@ -172,8 +163,8 @@ public class MentorApplicationService {
         return false;
     }
 
-
-    public byte[] downloadFile(String filename) throws IOException {
-        return fileStorageService.loadFile(filename);
+    // Get file as Resource for download
+    public Resource getFileAsResource(String filename) {
+        return fileStorageService.loadFileAsResource(filename);
     }
 }

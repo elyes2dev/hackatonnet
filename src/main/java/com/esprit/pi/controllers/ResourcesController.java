@@ -1,13 +1,11 @@
 package com.esprit.pi.controllers;
 
-import com.esprit.pi.dtos.ResourceRequest;
 import com.esprit.pi.entities.*;
 import com.esprit.pi.repositories.IWorkshopRepository;
 import com.esprit.pi.services.FileStorageService;
 import com.esprit.pi.services.IImageModelService;
 import com.esprit.pi.services.IResourcesService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -20,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 

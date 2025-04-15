@@ -59,3 +59,4 @@ public class UserController {
         return userService.updateUserPointsAndBadge(id);
     }
 }
+

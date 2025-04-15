@@ -204,6 +204,7 @@ public class User implements UserDetails {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
+    private Integer mentorPoints;
 
 
     public void calculateMentorPoints() {

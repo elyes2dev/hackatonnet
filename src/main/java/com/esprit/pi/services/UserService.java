@@ -117,6 +117,7 @@ public class UserService implements IUserService {
 
     @Autowired
     private MentorEvaluationRepository mentorEvaluationRepository;
+
     @Transactional
     public User updateUserPointsAndBadge(Long userId) {
         // Get a fresh entity from the database

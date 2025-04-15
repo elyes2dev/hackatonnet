@@ -6,17 +6,15 @@ import com.esprit.pi.entities.User;
 import com.esprit.pi.repositories.UserRepository;
 import com.esprit.pi.services.FileStorageService;
 import com.esprit.pi.services.MentorApplicationService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,6 +23,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,8 +40,10 @@ public class MentorApplicationController {
 
     @Autowired
     private FileStorageService fileStorageService;
+
     @Autowired
     private UserRepository userRepository;
+
     // Create
     @PostMapping
     @Operation(summary = "Create a new mentor application with file upload")
@@ -49,7 +52,6 @@ public class MentorApplicationController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     public ResponseEntity<MentorApplication> createApplication(
-
             @Parameter(
                     description = "Mentor application details",
                     schema = @Schema(implementation = MentorApplication.class)
@@ -57,7 +59,6 @@ public class MentorApplicationController {
             @ModelAttribute MentorApplication application,
             @Parameter(description = "CV file upload", content = @Content(mediaType = "application/pdf"))
             @RequestParam("cvFile") MultipartFile cvFile,
-
             @Parameter(description = "Upload paper (optional)", content = @Content(mediaType = "application/pdf"))
             @RequestParam(value = "uploadPaperFile", required = false) MultipartFile uploadPaperFile) {
         try {
@@ -100,38 +101,57 @@ public class MentorApplicationController {
         }
     }
 
-
     // File download endpoints
     @GetMapping("/{id}/cv")
     @Operation(summary = "Download CV file")
-    public ResponseEntity<byte[]> downloadCv(@PathVariable Long id) {
+    public ResponseEntity<Resource> downloadCv(@PathVariable Long id) {
         Optional<MentorApplication> application = applicationService.getApplicationById(id);
         if (application.isPresent() && application.get().getCv() != null) {
+            Resource resource = applicationService.getFileAsResource(application.get().getCv());
+
+            // Determine content type
+            String contentType = null;
             try {
-                byte[] fileContent = applicationService.downloadFile(application.get().getCv());
-                return ResponseEntity.ok()
-                        .header("Content-Disposition", "attachment; filename=\"" + application.get().getCv() + "\"")
-                        .body(fileContent);
+                contentType = Files.probeContentType(Paths.get(resource.getFile().getAbsolutePath()));
             } catch (IOException e) {
-                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
             }
+
+            if (contentType == null) {
+                contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/{id}/upload-paper")
     @Operation(summary = "Download upload paper file")
-    public ResponseEntity<byte[]> downloadUploadPaper(@PathVariable Long id) {
+    public ResponseEntity<Resource> downloadUploadPaper(@PathVariable Long id) {
         Optional<MentorApplication> application = applicationService.getApplicationById(id);
         if (application.isPresent() && application.get().getUploadPaper() != null) {
+            Resource resource = applicationService.getFileAsResource(application.get().getUploadPaper());
+
+            // Determine content type
+            String contentType = null;
             try {
-                byte[] fileContent = applicationService.downloadFile(application.get().getUploadPaper());
-                return ResponseEntity.ok()
-                        .header("Content-Disposition", "attachment; filename=\"" + application.get().getUploadPaper() + "\"")
-                        .body(fileContent);
+                contentType = Files.probeContentType(Paths.get(resource.getFile().getAbsolutePath()));
             } catch (IOException e) {
-                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
             }
+
+            if (contentType == null) {
+                contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
@@ -144,7 +164,6 @@ public class MentorApplicationController {
         return new ResponseEntity<>(applications, HttpStatus.OK);
     }
 
-    // Read
     @GetMapping("/{id}")
     @Operation(summary = "Get a mentor application by ID")
     @ApiResponse(responseCode = "200", description = "Application found")
@@ -154,9 +173,6 @@ public class MentorApplicationController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
-    // Download file
-
 
     @GetMapping("/mentor/{mentorId}")
     @Operation(summary = "Get applications by mentor ID")
@@ -178,7 +194,6 @@ public class MentorApplicationController {
         List<MentorApplication> applications = applicationService.getApplicationsByExperience(hasPreviousExperience);
         return new ResponseEntity<>(applications, HttpStatus.OK);
     }
-
 
     // Update status
     @PatchMapping("/{id}/status")

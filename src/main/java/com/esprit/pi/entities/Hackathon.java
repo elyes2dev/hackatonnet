@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
@@ -54,7 +55,7 @@ public class Hackathon implements Serializable {
 
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
-    @JsonIgnore // 🔥 This breaks the loop from Hackathon → User → Hackathon
+//    @JsonIgnore // 🔥 This breaks the loop from Hackathon → User → Hackathon
     @JsonProperty("createdBy")
     private User createdBy;
 

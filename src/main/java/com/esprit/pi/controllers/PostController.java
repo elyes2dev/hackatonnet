@@ -21,8 +21,8 @@ import java.util.Map;
 
 @RestController
 @AllArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
-@RequestMapping("/posts")
+//@CrossOrigin(origins = "http://localhost:4200")
+@RequestMapping("/pi/posts")
 public class PostController {
     @Autowired
     private final IPostService postService;

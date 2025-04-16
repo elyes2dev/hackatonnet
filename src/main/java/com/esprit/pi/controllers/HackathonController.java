@@ -12,8 +12,8 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
-@RequestMapping("/hackathons")
+//@CrossOrigin(origins = "http://localhost:4200")
+@RequestMapping("/pi/hackathons")
 public class HackathonController {
     @Autowired
     IHackathonService hackathonService;

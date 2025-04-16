@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,31 +8,70 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.util.Date;
+import java.io.Serializable;
+import java.util.*;
 
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-public class Post {
-
+public class Post implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonProperty("title")
     private String title;
-    private String logo;
+
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
+    @ElementCollection
+    private List<String> images;
 
     @ManyToOne
-    @JoinColumn(name = "posted_by", nullable = false)
-    private User postedBy;  // Relationship with User
+    @JoinColumn(name = "posted_by")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = false)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private User postedBy;
 
     @ManyToOne
-    @JoinColumn(name = "hackathon_id", nullable = false)
-    private Hackathon hackathon;  // Relationship with Hackathon
+    @JoinColumn(name = "hackathon_id")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = false)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Hackathon hackathon;
+
+    @ManyToMany
+    @JoinTable(
+            name = "post_likes",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> likes = new HashSet<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Comment> comments = new ArrayList<>();
 
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;  // Timestamp for when the post was created
+    @JsonProperty("createdAt")
+    private Date createdAt;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @JsonProperty("updatedAt")
+    private Date updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = new Date();
+    }
 }

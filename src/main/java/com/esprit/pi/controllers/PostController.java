@@ -2,8 +2,12 @@ package com.esprit.pi.controllers;
 
 import com.esprit.pi.dto.CommentRequest;
 import com.esprit.pi.dto.CommentResponse;
+import com.esprit.pi.entities.Hackathon;
 import com.esprit.pi.entities.Post;
+import com.esprit.pi.entities.User;
 import com.esprit.pi.services.IPostService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,28 +34,34 @@ public class PostController {
 
     CommentController commentController;
 
-//    @PostMapping
-//    public ResponseEntity<?> createPost(
-//            @RequestBody Post post,
-//            @RequestPart(required = false) List<MultipartFile> images) {
-//        try {
-//            Post savedPost = postService.createPost(post, images);
-//            return ResponseEntity.status(HttpStatus.CREATED).body(savedPost);
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body("Error creating post: " + e.getMessage());
-//        }
-//    }
 
-    @PostMapping
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createPost(
-            @RequestPart("post") Post post,
+            @RequestPart("post") String postStr,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) {
         try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode postNode = objectMapper.readTree(postStr);
+
+            // Create post from JSON
+            Post post = new Post();
+            post.setTitle(postNode.get("title").asText());
+            post.setContent(postNode.get("content").asText());
+
+            // Set relationships by ID
+            User user = new User();
+            user.setId(postNode.get("postedBy").asLong());
+            post.setPostedBy(user);
+
+            Hackathon hackathon = new Hackathon();
+            hackathon.setId(postNode.get("hackathon").asLong());
+            post.setHackathon(hackathon);
+
             Post savedPost = postService.createPost(post, images);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedPost);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error creating post: " + e.getMessage());
         }
     }

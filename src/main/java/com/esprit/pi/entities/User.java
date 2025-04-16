@@ -9,9 +9,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.jdbc.Work;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,8 +18,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.*;
 
 
-@Getter
-@Setter
+import java.util.*;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -70,22 +68,23 @@ public class User implements UserDetails {
 
     @JsonIgnore  // This will prevent the workshops field from being serialized
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Workshop> workshops = new ArrayList<>(); // Fixed initialization
-
+    private List<Workshop> workshops = new ArrayList<>();
     @JsonIgnore
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Hackathon> hackathons;  // This adds the relationship to Hackathons
+    private List<Hackathon> hackathons = new ArrayList<>();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference // Manages forward serialization
-    private SponsorApplication sponsorApplication; // One-to-One Relationship
+    private SponsorApplication sponsorApplication;
 
     @OneToOne(mappedBy = "sponsor", cascade = CascadeType.ALL, orphanRemoval = true)
     private SponsorReward sponsorReward;
 
     // Many-to-many relationship with Team through TeamMembers
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TeamMembers> teamMembers;
+    @JsonIgnore // Prevents serialization of teamMembers
+    private List<TeamMembers> teamMembers = new ArrayList<>();
+
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties({"user", "quiz"}) // Avoid circular references and unnecessary data
@@ -94,7 +93,7 @@ public class User implements UserDetails {
     private int monitorPoints = 0;
 
     @Enumerated(EnumType.STRING)
-    private BadgeLevel badge = BadgeLevel.JUNIOR_COACH; // Default
+    private BadgeLevel badge = BadgeLevel.JUNIOR_COACH;
 
     @OneToMany(mappedBy = "mentor", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = false)
     @JsonIgnore
@@ -106,7 +105,17 @@ public class User implements UserDetails {
     @JsonIgnore
     private MentorApplication mentorApplication;
 
+    public void setMentorPoints(int totalPoints) {
+        this.mentorPoints=totalPoints;
+    }
 
+    public void setBadge(BadgeLevel badgeLevel) {
+        this.badge=badgeLevel;
+    }
+
+    public BadgeLevel getBadge() {
+        return badge;
+    }
 
     public enum BadgeLevel {
         JUNIOR_COACH,
@@ -116,6 +125,9 @@ public class User implements UserDetails {
         MASTER_MENTOR
     }
 
+    public String getPicture() {
+        return picture;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -243,5 +255,105 @@ public class User implements UserDetails {
         } else {
             this.badge = BadgeLevel.JUNIOR_COACH;
         }
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Integer getScore() {
+        return score;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public Set<Skill> getSkills() {
+        return skills;
+    }
+
+    public List<Hackathon> getHackathons() {
+        return hackathons;
+    }
+
+    public SponsorApplication getSponsorApplication() {
+        return sponsorApplication;
+    }
+
+    public SponsorReward getSponsorReward() {
+        return sponsorReward;
+    }
+
+    public List<TeamMembers> getTeamMembers() {
+        return teamMembers;
+    }
+
+    public int getMonitorPoints() {
+        return monitorPoints;
+    }
+
+    public Set<MentorEvaluation> getEvaluations() {
+        return evaluations;
+    }
+
+    public MentorApplication getMentorApplication() {
+        return mentorApplication;
+    }
+
+    public Integer getMentorPoints() {
+        return mentorPoints;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setScore(Integer score) {
+        this.score = score;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setSkills(Set<Skill> skills) {
+        this.skills = skills;
+    }
+
+    public void setHackathons(List<Hackathon> hackathons) {
+        this.hackathons = hackathons;
+    }
+
+    public void setSponsorApplication(SponsorApplication sponsorApplication) {
+        this.sponsorApplication = sponsorApplication;
+    }
+
+    public void setSponsorReward(SponsorReward sponsorReward) {
+        this.sponsorReward = sponsorReward;
+    }
+
+    public void setTeamMembers(List<TeamMembers> teamMembers) {
+        this.teamMembers = teamMembers;
+    }
+
+    public void setMonitorPoints(int monitorPoints) {
+        this.monitorPoints = monitorPoints;
+    }
+
+    public void setEvaluations(Set<MentorEvaluation> evaluations) {
+        this.evaluations = evaluations;
+    }
+
+    public void setMentorApplication(MentorApplication mentorApplication) {
+        this.mentorApplication = mentorApplication;
+    }
+
+    public void setMentorPoints(Integer mentorPoints) {
+        this.mentorPoints = mentorPoints;
     }
 }

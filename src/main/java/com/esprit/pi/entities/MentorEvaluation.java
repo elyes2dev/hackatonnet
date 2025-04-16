@@ -30,6 +30,8 @@ public class MentorEvaluation {
     @Column(nullable = false)
     private int rating; // From 1 to 5
 
+
+
     @Column(columnDefinition = "TEXT")
     private String feedbackText;
 

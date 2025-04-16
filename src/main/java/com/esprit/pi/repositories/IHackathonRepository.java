@@ -1,3 +1,21 @@
+<<<<<<<< HEAD:src/main/java/com/esprit/pi/repositories/IDocumentRepository.java
+package com.esprit.pi.repositories;
+
+import com.esprit.pi.entities.Document;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface IDocumentRepository extends JpaRepository<Document, Long> {
+
+    @Query("SELECT d FROM Document d WHERE d.resource.id = :resourceId")
+    List<Document> findByResourceId(@Param("resourceId") Long resourceId);
+}
+========
 package com.esprit.pi.repositories;
 
 import com.esprit.pi.entities.Hackathon;
@@ -5,5 +23,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface IHackathonRepository extends JpaRepository<Hackathon,Long> {
+public interface IHackathonRepository extends JpaRepository<Hackathon,Long>{
+
+
 }
+>>>>>>>> origin/tasnim-merge:src/main/java/com/esprit/pi/repositories/IHackathonRepository.java

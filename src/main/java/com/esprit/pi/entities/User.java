@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -33,11 +34,8 @@ public class User implements UserDetails {
 
     private String name;
     private String lastname;
-
     private String email;
-
     private String username;
-
     private String password;
 
     @Temporal(TemporalType.DATE)
@@ -49,7 +47,6 @@ public class User implements UserDetails {
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
-
 
     @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
@@ -75,7 +72,7 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Workshop> workshops = new ArrayList<>(); // Fixed initialization
 
-
+    @JsonIgnore
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Hackathon> hackathons;  // This adds the relationship to Hackathons
 

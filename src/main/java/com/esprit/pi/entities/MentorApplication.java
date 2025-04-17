@@ -1,6 +1,7 @@
 package com.esprit.pi.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -31,6 +32,11 @@ public class MentorApplication {
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({
+            "mentorApplication", "hackathons", "workshops", "skills", "teamMembers",
+            "evaluations", "password", "authorities", "userQuizScores",
+            "sponsorApplication", "sponsorReward"
+    })
     private User user;
 
 

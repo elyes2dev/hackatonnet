@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,10 +20,18 @@ public class ListMentor {
 
     @ManyToOne
     @JoinColumn(name = "mentor_id", nullable = false)
+    @JsonIgnoreProperties({
+            "hackathons", "workshops", "skills", "teamMembers", "password", "authorities", "userQuizScores",
+            "sponsorApplication", "sponsorReward", "mentorApplication"
+    })
     private User mentor;
 
     @ManyToOne
     @JoinColumn(name = "hackathon_id", nullable = false)
+    @JsonIgnoreProperties({
+            "teams", "prizes", "posts",
+            "createdBy"
+    })
     private Hackathon hackathon;
 
     private int numberOfTeams;

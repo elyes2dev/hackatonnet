@@ -145,6 +145,12 @@
             <artifactId>stripe-java</artifactId>
             <version>20.122.0</version> <!-- Utiliser une version plus récente -->
         </dependency>
+
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>5.7.1</version>
+        </dependency>
     </dependencies>
 
     <build>

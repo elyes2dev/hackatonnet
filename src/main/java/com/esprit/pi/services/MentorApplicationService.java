@@ -7,6 +7,8 @@ import com.esprit.pi.entities.User;
 import com.esprit.pi.repositories.MentorApplicationRepository;
 import com.esprit.pi.repositories.PreviousExperienceRepository;
 import com.esprit.pi.repositories.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,9 @@ public class MentorApplicationService {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private EmailService emailService;
 
     // Create
     @Transactional
@@ -132,6 +137,7 @@ public class MentorApplicationService {
         Optional<MentorApplication> optionalApp = mentorApplicationRepository.findById(id);
         if (optionalApp.isPresent()) {
             MentorApplication app = optionalApp.get();
+            ApplicationStatus oldStatus = app.getStatus();
             app.setStatus(newStatus);
 
             // If the application is approved, update the user to be a mentor
@@ -139,6 +145,13 @@ public class MentorApplicationService {
                 User user = app.getUser();
                 // user.setMentor(true);************ to do when merged with user
                 userRepository.save(user);
+
+                // Send approval email
+                sendStatusUpdateEmail(app, true);
+            }
+            // If the application is rejected, send rejection email
+            else if (newStatus == ApplicationStatus.REJECTED) {
+                sendStatusUpdateEmail(app, false);
             }
 
             return mentorApplicationRepository.save(app);
@@ -146,25 +159,90 @@ public class MentorApplicationService {
         return null;
     }
 
+
+    /**
+     * Sends an email notification to the applicant about their application status
+     * @param application The mentor application
+     * @param isApproved Whether the application was approved or rejected
+     */
+    private void sendStatusUpdateEmail(MentorApplication application, boolean isApproved) {
+        User user = application.getUser();
+        String userEmail = user.getEmail();
+        String userName = user.getName() + " " + user.getLastname();
+
+        String subject;
+        String body;
+
+        if (isApproved) {
+            subject = "Congratulations! Your Mentor Application Has Been Approved";
+            body = "Dear " + userName + ",\n\n" +
+                    "We are pleased to inform you that your application to become a mentor has been approved. " +
+                    "You can now access mentor features on our platform.\n\n" +
+                    "Thank you for your interest in sharing your knowledge and expertise with our community.\n\n" +
+                    "Best regards,\nThe Team";
+        } else {
+            subject = "Update on Your Mentor Application";
+            body = "Dear " + userName + ",\n\n" +
+                    "Thank you for your interest in becoming a mentor on our platform. " +
+                    "After careful review, we regret to inform you that your application has not been approved at this time.\n\n" +
+                    "We appreciate your understanding and encourage you to apply again in the future.\n\n" +
+                    "Best regards,\nThe Team";
+        }
+
+        // Use the existing email service to send the notification
+        emailService.sendSimpleEmail(userEmail, subject, body);
+    }
+
     // Delete
     @Transactional
-    public boolean deleteApplication(Long id) throws IOException {
-        Optional<MentorApplication> optionalApp = mentorApplicationRepository.findById(id);
-        if (optionalApp.isPresent()) {
-            MentorApplication app = optionalApp.get();
+    public boolean deleteApplication(Long id) {
+        try {
+            // Check if application exists
+            Optional<MentorApplication> applicationOpt = mentorApplicationRepository.findById(id);
+            if (applicationOpt.isEmpty()) {
+                return false;
+            }
 
-            // No file deletion needed since we're just deleting the application record
-            // The file management is handled separately
+            MentorApplication application = applicationOpt.get();
 
-            // Delete the application
-            mentorApplicationRepository.deleteById(id);
-            return true;
+            // Step 1: Remove the relationship with User (if it's bi-directional)
+            // This is important to break the bidirectional reference that might cause issues
+            User user = application.getUser();
+            if (user != null && user.getMentorApplication() != null) {
+                user.setMentorApplication(null);
+                userRepository.save(user);
+            }
+
+            // Step 2: Clear collections explicitly
+            if (application.getPreviousExperiences() != null) {
+                // Handle previous experiences properly
+                application.getPreviousExperiences().clear();
+            }
+
+            if (application.getLinks() != null) {
+                application.getLinks().clear();
+            }
+
+            // Save changes before deletion to ensure collections are properly cleared
+            mentorApplicationRepository.saveAndFlush(application);
+
+            // Step 3: Now delete the application
+            mentorApplicationRepository.delete(application);
+            mentorApplicationRepository.flush();
+
+            // Verify deletion
+            return !mentorApplicationRepository.existsById(id);
+        } catch (Exception e) {
+            // Log the error with proper details
+            return false;
         }
-        return false;
     }
 
     // Get file as Resource for download
     public Resource getFileAsResource(String filename) {
         return fileStorageService.loadFileAsResource(filename);
     }
+
+
+
 }

@@ -64,7 +64,6 @@ public class MentorApplication {
 
     @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<PreviousExperience> previousExperiences;
 
     @CreationTimestamp

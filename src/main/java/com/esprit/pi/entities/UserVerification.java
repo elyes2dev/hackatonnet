@@ -13,19 +13,16 @@ public class UserVerification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String email;
-
-    @Column(nullable = false)
-    private String verificationCode;
-
-
     public Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getVerificationCode() {
@@ -36,11 +33,16 @@ public class UserVerification {
         this.verificationCode = verificationCode;
     }
 
-    public String getEmail() {
-        return email;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    @Column(nullable = false)
+    private String email;
+
+    @Column(nullable = false)
+    private String verificationCode;
+
+
+
 }

@@ -28,7 +28,6 @@ public class TeamMembers {
     @JsonBackReference
     private Team team;
 
-    // Many-to-one relationship with User
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "user_id", nullable = false)
@@ -36,13 +35,11 @@ public class TeamMembers {
 
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
-    private Date joinedAt;  // Timestamp when the user joined the team
+    private Date joinedAt;
 
-    // Role of the user in the team (LEADER, MEMBER, MENTOR)
     @Enumerated(EnumType.STRING)
-    private Role role;  // Enum field for role (LEADER, MEMBER, MENTOR)
+    private Role role;
 
-    // One-to-many relationship with TeamDiscussion (Each team member can post many discussions)
     @OneToMany(mappedBy = "teamMember", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore // Prevents serialization of teamDiscussions to break the loop
     private List<TeamDiscussion> teamDiscussions;

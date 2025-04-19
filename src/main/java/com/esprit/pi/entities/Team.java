@@ -1,6 +1,8 @@
 package com.esprit.pi.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -13,19 +15,18 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.util.Date;
 import java.util.List;
 
+@Entity
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-@Entity
 public class Team {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String teamName;  // The name of the team
-    private String teamCode;  // A unique code for the team
+    private String teamName;
+    private String teamCode;
 
     @Column(name = "is_public")
     private Boolean isPublic;
@@ -38,19 +39,13 @@ public class Team {
 
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;  // Timestamp of when the team was created
+    private Date createdAt;
 
-    // Getter and Setter for hackathon
-    // Relationship with Hackathon (Each team is associated with one hackathon)
-    @Setter
-    @Getter
     @ManyToOne
     @JoinColumn(name = "hackathon_id", nullable = false)
     @JsonIgnoreProperties({"teams", "createdBy", "posts", "prizes"}) // 🔥 Only serialize the hackathon ID/title
     private Hackathon hackathon;  // The hackathon this team belongs to
 
-
-    // One-to-many relationship with TeamMembers (Each team has multiple members)
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<TeamMembers> teamMembers;
@@ -58,7 +53,8 @@ public class Team {
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore // Prevents serialization of teamDiscussions
     private List<TeamDiscussion> teamDiscussions;
-
+    public Team() {
+    }
     // Getters and Setters (unchanged)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

@@ -9,7 +9,7 @@ import java.util.Map;
 
 public interface ISponsorApplicationService {
     SponsorApplication submitApplication(long userId, SponsorApplication application);
-    ResponseEntity<Map<String, String>> aiVerifyApplication(int applicationId);
+    ResponseEntity<Map<String, Object>> aiVerifyApplication(int applicationId);
     List<SponsorApplication> getAllApplications();
     SponsorApplication getApplicationById(int id);
     SponsorApplicationDTO getApplicationByIdDTO(int id);

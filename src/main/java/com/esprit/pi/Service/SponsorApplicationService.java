@@ -2,6 +2,7 @@ package com.esprit.pi.Service;
 
 import com.esprit.pi.DTO.SponsorApplicationDTO;
 import com.esprit.pi.DTO.UserDTO;
+import com.esprit.pi.DTO.VerificationResultDTO;
 import com.esprit.pi.Repository.IRoleRepository;
 import com.esprit.pi.Repository.ISponsorApplicationRepository;
 import com.esprit.pi.Repository.ISponsorRewardRepository;
@@ -44,6 +45,8 @@ public class SponsorApplicationService implements ISponsorApplicationService{
     OCRService ocrService;
     @Autowired
     CompanyVerifier companyVerifier;
+    @Autowired
+    SponsorVerificationService sponsorVerificationService;
 
 
 
@@ -75,46 +78,28 @@ public class SponsorApplicationService implements ISponsorApplicationService{
         return savedApp;
     }
 
-    public ResponseEntity<Map<String, String>> aiVerifyApplication(int applicationId) {
+    public ResponseEntity<Map<String, Object>> aiVerifyApplication(int applicationId) {
         SponsorApplication application = getApplicationById(applicationId);
         String documentPath = "uploads/" + application.getDocumentPath();
 
-        String extractedText = ocrService.extractTextFromFile(documentPath);
-        System.out.println("🔍 Extracted from document: \n" + extractedText);
+        VerificationResultDTO result = sponsorVerificationService.verifyDocument(documentPath);
 
-        if (extractedText == null || extractedText.isEmpty()) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "❌ Could not read text from the document.");
-            return ResponseEntity.status(500).body(response);
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", result.getMessage());
+        response.put("success", result.isSuccess());
+        response.put("fieldMatches", result.getFieldMatches());
+        response.put("detectedCompanyName", result.getDetectedCompanyName());
+
+        if (result.isSuccess()) {
+            approveApplication(applicationId);
+            response.put("status", "APPROVED");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("status", "REQUIRES_MANUAL_REVIEW");
+            return ResponseEntity.status(422).body(response);
         }
-
-        String detectedCompany = null;
-        for (String line : extractedText.split("\\r?\\n")) {
-            if (line.toLowerCase().contains("company name")) {
-                detectedCompany = line.split(":")[1].trim();
-                break;
-            }
-        }
-
-        if (detectedCompany == null) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "❌ Could not detect the company name in the document.");
-            return ResponseEntity.status(404).body(response);
-        }
-
-        boolean isValid = companyVerifier.verifyCompany(detectedCompany);
-        if (!isValid) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "❌ Company not found in official registries: " + detectedCompany);
-            return ResponseEntity.status(404).body(response);
-        }
-
-        approveApplication(applicationId);
-
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "✅ Company verified and application auto-approved for: " + detectedCompany);
-        return ResponseEntity.ok(response);
     }
+
 
 
 

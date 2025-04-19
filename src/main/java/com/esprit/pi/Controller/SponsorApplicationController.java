@@ -34,9 +34,10 @@ public class SponsorApplicationController {
     }
 
     @PutMapping("/{id}/ai-verify")
-    public ResponseEntity<Map<String, String>> aiVerify(@PathVariable int id) {
+    public ResponseEntity<Map<String, Object>> aiVerify(@PathVariable int id) {
         return sponsorApplicationService.aiVerifyApplication(id);
     }
+
 
 
     @GetMapping("/getallapplications")

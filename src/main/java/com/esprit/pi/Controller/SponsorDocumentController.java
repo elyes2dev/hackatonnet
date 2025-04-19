@@ -1,11 +1,9 @@
 package com.esprit.pi.Controller;
 
+import com.esprit.pi.DTO.VerificationResultDTO;
 import com.esprit.pi.Service.SponsorVerificationService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/sponsor-documents")
@@ -18,15 +16,15 @@ public class SponsorDocumentController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<String> verify(@RequestParam("filePath") String filePath) {
-        System.out.println("Received file path: " + filePath); // Debug print
-        boolean isVerified = verificationService.verifyDocument(filePath);
+    public ResponseEntity<VerificationResultDTO> verify(@RequestParam("filePath") String filePath) {
+        System.out.println("📩 Received file path for AI verification: " + filePath);
 
-        if (isVerified) {
-            return ResponseEntity.ok("✅ Company verified successfully");
+        VerificationResultDTO result = verificationService.verifyDocument(filePath);
+
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result);
         } else {
-            return ResponseEntity.status(404).body("❌ Company not found");
+            return ResponseEntity.status(422).body(result);
         }
     }
 }
-

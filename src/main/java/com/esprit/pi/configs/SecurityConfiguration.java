@@ -20,6 +20,32 @@ import org.springframework.web.filter.CorsFilter;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
+    // Current timestamp: 2025-04-15 15:58:46
+    // Current user: Zoghlamirim
+    private static final String[] PUBLIC_URLS = {
+            "/",
+            "/error",
+            "/open",
+            "/login",
+            "/api/open/**",
+            "/auth/**",
+            "/swagger-ui/**",
+            "/swagger-resources",
+            "/swagger-resources/**",
+            "/configuration/ui",
+            "/configuration/security",
+            "/swagger-ui/**",
+            "/webjars/**",
+            "/swagger-ui.html",
+            "/v3/api-docs/**"
+    };
+
+    private static final String[] HACKATHON_ENDPOINTS = {
+            "/pi/api/hackathons",
+            "/pi/api/hackathons/**",
+            "/api/hackathons",
+            "/api/hackathons/**"
+    };
 
     private final JwtFilter jwtFilter;
     private final UserRepository userRepository;
@@ -34,18 +60,18 @@ public class SecurityConfiguration {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> {
-                    request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                            .requestMatchers("/", "/error", "/open", "/login",
-                                    "/api/open/**", "/auth/**", "/swagger-ui/**",
-                                    "/swagger-resources", "/swagger-resources/**",
-                                    "/configuration/ui", "/configuration/security",
-                                    "/swagger-ui/**", "/webjars/**", "/swagger-ui.html",
-                                    "/v3/api-docs/**", "/api/teams/**",
-                                    "/api/team-discussions/**", "/api/team-members/**").permitAll()
-                            .requestMatchers("/pi/api/hackathons").permitAll() // Match exact frontend URL
+                    request
+                            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                            .requestMatchers(PUBLIC_URLS).permitAll()
+                            .requestMatchers(HttpMethod.GET, HACKATHON_ENDPOINTS).permitAll()
+                            .requestMatchers("/api/teams/**").permitAll()
+                            .requestMatchers("/api/team-discussions/**").permitAll()
+                            .requestMatchers("/api/team-members/**").permitAll()
                             .anyRequest().authenticated();
                 })
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
@@ -54,18 +80,35 @@ public class SecurityConfiguration {
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
+
+        // CORS configuration
         config.setAllowCredentials(true);
         config.addAllowedOrigin("http://localhost:4200");
         config.addAllowedOrigin("http://localhost:9100");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
+        config.addExposedHeader("Authorization");
+
+        // Add additional headers for Swagger
+        config.addExposedHeader("Access-Control-Allow-Origin");
+        config.addExposedHeader("Access-Control-Allow-Methods");
+        config.addExposedHeader("Access-Control-Allow-Headers");
+
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
     }
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring().requestMatchers("/images/**", "/js/**", "/default-ui.css");
+        return web -> web.ignoring()
+                .requestMatchers(
+                        "/images/**",
+                        "/js/**",
+                        "/default-ui.css",
+                        "/swagger-ui/**",
+                        "/swagger-resources/**",
+                        "/v3/api-docs/**"
+                );
     }
 
     @Bean
@@ -75,6 +118,7 @@ public class SecurityConfiguration {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance(); // Upgrade to BCryptPasswordEncoder in production
+        // TODO: Replace with BCryptPasswordEncoder for production use
+        return NoOpPasswordEncoder.getInstance();
     }
 }

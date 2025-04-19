@@ -7,6 +7,7 @@ import com.esprit.pi.services.ITeamDiscussionService;
 import com.esprit.pi.services.ITeamMembersService;
 import com.esprit.pi.services.JwtUtility;
 import com.esprit.pi.repositories.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,8 +17,17 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +44,32 @@ public class TeamDiscussionController {
     private final SimpMessagingTemplate messagingTemplate;
     private final JwtUtility jwtUtility;
     private final UserRepository userRepository;
+    private static final String UPLOAD_DIR = "uploads/";
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("teamMemberId") Long teamMemberId,
+            @RequestParam("teamId") Long teamId
+    ) throws IOException {
+        // Save file to disk
+        String fileName = org.springframework.util.StringUtils.cleanPath(file.getOriginalFilename());
+        Path uploadPath = Paths.get("uploads");
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        Path filePath = uploadPath.resolve(fileName);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
+        // Construct file URL (adjust port if needed)
+        String fileUrl = "http://localhost:9100/uploads/" + fileName;
+
+        // Save discussion using your service (this ensures DB persistence)
+        TeamDiscussion discussion = teamDiscussionService.createDiscussion(
+                teamMemberId, fileUrl, ChatMessageDTO.TeamDiscussionType.FILE
+        );
+
+        return ResponseEntity.ok(discussion);
+    }
     @Autowired
     public TeamDiscussionController(ITeamDiscussionService teamDiscussionService,
                                     ITeamMembersService teamMembersService,

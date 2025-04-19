@@ -15,4 +15,12 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true); // Allow credentials (JWT)
     }
+    @Override
+    public void addResourceHandlers(org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/uploads/**")
+                //.addResourceLocations("file:/C:/Users/HP/hackatonnet/uploads/");
+
+        .addResourceLocations("file:uploads/");
+
+    }
 }

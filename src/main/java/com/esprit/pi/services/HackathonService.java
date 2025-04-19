@@ -1,17 +1,28 @@
+
 package com.esprit.pi.services;
 
 import com.esprit.pi.entities.Hackathon;
+import com.esprit.pi.repositories.HackathonRepository;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class HackathonService {
+@AllArgsConstructor
+public class HackathonService implements IHackathonService{
+
+    @Autowired
+    HackathonRepository hackathonRepository;
+
+    @Override
+    public Hackathon getHackathonById(Long id) {
+        return hackathonRepository.findById(id).orElse(null);
+    }
+
+    @Override
     public List<Hackathon> getAllHackathons() {
-        List<Hackathon> hackathons = new ArrayList<>();
-        hackathons.add(new Hackathon(1, "Hackathon 1", 5)); // Adjust fields as per your model
-        hackathons.add(new Hackathon(2, "Hackathon 2", 4));
-        return hackathons; // Replace with DB call if applicable
+        return (List<Hackathon>) hackathonRepository.findAll();
     }
 }

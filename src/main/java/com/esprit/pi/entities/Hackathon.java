@@ -18,7 +18,6 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 
 public class Hackathon implements Serializable {
@@ -41,6 +40,7 @@ public class Hackathon implements Serializable {
 
     @JsonProperty("isOnline")
     private Boolean isOnline;
+    private Integer maxTeamSize; // Maximum number of members allowed in a team
 
     @JsonProperty("description")
     private String description;
@@ -80,8 +80,35 @@ public class Hackathon implements Serializable {
         return this.createdBy;
     }
 
+
+    public Hackathon(int i, String s, int i1) {
+
+    }
+    // Default constructor required by JPA
+    public Hackathon() {
+    }
+
+    // Your other constructors, getters, and setters
+    public Hackathon(Long id, String title, Integer maxTeamSize) {
+        this.id = id;
+        this.title = title;
+        this.maxTeamSize = maxTeamSize;
+    }
+
+    // Explicitly add the methods that are causing the error
     public Long getId() {
         return this.id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Integer getMaxTeamSize() {
+        return this.maxTeamSize;
+    }
+
+    public void setMaxTeamSize(Integer maxTeamSize) {
+        this.maxTeamSize = maxTeamSize;
+    }
 }

@@ -1,6 +1,7 @@
 package com.esprit.pi.controllers;
 
 import com.esprit.pi.entities.Hackathon;
+import com.esprit.pi.repositories.IHackathonRepository;
 import com.esprit.pi.services.IHackathonService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

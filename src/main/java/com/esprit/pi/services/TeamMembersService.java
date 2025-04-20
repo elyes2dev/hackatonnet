@@ -14,7 +14,7 @@ import java.util.List;
 @Slf4j
 @AllArgsConstructor
 @NoArgsConstructor
-public class TeamMembersService  {
+public class TeamMembersService implements ITeamMembersService  {
 
     @Autowired
     private TeamMembersRepository teamMembersRepository;
@@ -28,15 +28,23 @@ public class TeamMembersService  {
         return teamMembersRepository.save(teamMembers);
     }
 
-    public void deleteTeamMember(long id) {
+    public void deleteTeamMember(Long id) {
         teamMembersRepository.deleteById(id);
     }
 
     public TeamMembers updateTeamMember(TeamMembers teamMember) {
+        if (teamMember.getId() == null) {
+            throw new RuntimeException("TeamMember ID cannot be null for update operation");
+        }
         return teamMembersRepository.save(teamMember);
     }
 
-    public TeamMembers findTeamMemberById(long id) {
-        return teamMembersRepository.findById(id).orElseThrow(() -> new RuntimeException("TeamMember not found"));
+    public TeamMembers findTeamMemberById(Long id) {
+        return teamMembersRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("TeamMember not found with ID: " + id));
+    }
+
+    public List<TeamMembers> findMembersByTeamId(Long teamId) {
+        return teamMembersRepository.findByTeamId(teamId);
     }
 }

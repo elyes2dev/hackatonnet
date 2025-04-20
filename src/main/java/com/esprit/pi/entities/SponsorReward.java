@@ -1,5 +1,6 @@
 package com.esprit.pi.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,6 +21,7 @@ public class SponsorReward {
     private long id;
 
     @OneToOne
+    @JsonBackReference
     private User sponsor; // Links to the User (Sponsor)
 
     private int reputationPoints = 0; // Total earned points

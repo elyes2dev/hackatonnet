@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.jdbc.Work;
@@ -23,6 +24,7 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class User implements UserDetails {
 
@@ -115,6 +117,14 @@ public class User implements UserDetails {
 
     public BadgeLevel getBadge() {
         return badge;
+    }
+
+    public String getRole() {
+        return roles.toString();
+    }
+
+    public void setRole(Role role) {
+        this.roles.add(role);
     }
 
     public enum BadgeLevel {

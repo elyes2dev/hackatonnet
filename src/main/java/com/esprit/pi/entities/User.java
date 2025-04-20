@@ -80,6 +80,7 @@ public class User implements UserDetails {
     private SponsorApplication sponsorApplication;
 
     @OneToOne(mappedBy = "sponsor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private SponsorReward sponsorReward;
 
     // Many-to-many relationship with Team through TeamMembers

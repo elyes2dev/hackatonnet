@@ -120,13 +120,7 @@ public class User implements UserDetails {
         return badge;
     }
 
-    public String getRole() {
-        return roles.toString();
-    }
-
-    public void setRole(Role role) {
-        this.roles.add(role);
-    }
+   
 
     public enum BadgeLevel {
         JUNIOR_COACH,

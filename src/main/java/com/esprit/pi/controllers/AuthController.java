@@ -214,7 +214,7 @@ public class AuthController {
         }
 
         // 2. Generate your JWT
-        Map<String,String> claims = Map.of("role", user.getRole());
+        Map<String,String> claims = Map.of("role", user.getRoles());
         String jwt = jwtUtility.generateToken(claims, email, 86_400_000);
 
         // 3. Build a Set-Cookie header for an HttpOnly, Secure cookie

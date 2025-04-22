@@ -33,6 +33,11 @@ public class SponsorApplicationController {
         }
     }
 
+    @PutMapping("/{id}/ai-verify")
+    public ResponseEntity<Map<String, Object>> aiVerify(@PathVariable int id) {
+        return sponsorApplicationService.aiVerifyApplication(id);
+    }
+
     @GetMapping("/getallapplications")
     public ResponseEntity<List<SponsorApplication>> getAllApplications() {
         return ResponseEntity.ok(sponsorApplicationService.getAllApplications());

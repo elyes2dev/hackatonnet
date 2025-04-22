@@ -2,6 +2,7 @@ package com.esprit.pi.services;
 
 import com.esprit.pi.dtos.SponsorApplicationDTO;
 import com.esprit.pi.dtos.UserDTO;
+import com.esprit.pi.dtos.VerificationResultDTO;
 import com.esprit.pi.repositories.IRoleRepository;
 import com.esprit.pi.repositories.ISponsorApplicationRepository;
 import com.esprit.pi.repositories.ISponsorRewardRepository;
@@ -13,11 +14,14 @@ import com.esprit.pi.entities.User;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -37,6 +41,12 @@ public class SponsorApplicationService implements ISponsorApplicationService{
     SponsorNotificationService sponsorNotificationService;
     @Autowired
     ISponsorRewardRepository sponsorRewardRepository;
+    @Autowired
+    OCRService ocrService;
+    @Autowired
+    CompanyVerifier companyVerifier;
+    @Autowired
+    SponsorVerificationService sponsorVerificationService;
 
 
     static final int EXPIRATION_MINUTES = 5; // 5 minutes for testing
@@ -65,6 +75,28 @@ public class SponsorApplicationService implements ISponsorApplicationService{
         sponsorNotificationService.createGlobalNotification(message);
 
         return savedApp;
+    }
+
+    public ResponseEntity<Map<String, Object>> aiVerifyApplication(int applicationId) {
+        SponsorApplication application = getApplicationById(applicationId);
+        String documentPath = "uploads/" + application.getDocumentPath();
+
+        VerificationResultDTO result = sponsorVerificationService.verifyDocument(documentPath);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", result.getMessage());
+        response.put("success", result.isSuccess());
+        response.put("fieldMatches", result.getFieldMatches());
+        response.put("detectedCompanyName", result.getDetectedCompanyName());
+
+        if (result.isSuccess()) {
+            approveApplication(applicationId);
+            response.put("status", "APPROVED");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("status", "REQUIRES_MANUAL_REVIEW");
+            return ResponseEntity.status(422).body(response);
+        }
     }
 
 

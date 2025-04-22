@@ -48,7 +48,7 @@ public class SecurityConfiguration {
                 .securityMatcher("/api/**", "/auth/**","/**","/login/**")
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> {
-                    request.requestMatchers("/api/open/**", "/auth/**","/**","/login/**").permitAll();
+                    request.requestMatchers("/api/open/**", "/auth/**","/**","/login/**","/certificates/download").permitAll();
                     request.anyRequest().authenticated();
                 })
                 .oauth2ResourceServer(rs -> rs.jwt())

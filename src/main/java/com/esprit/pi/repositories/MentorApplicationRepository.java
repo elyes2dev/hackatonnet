@@ -14,5 +14,8 @@ public interface MentorApplicationRepository extends JpaRepository<MentorApplica
 
         List<MentorApplication> findByUserId(Long userId);
         List<MentorApplication> findByStatus(ApplicationStatus status);
+
         List<MentorApplication> findByHasPreviousExperience(boolean hasPreviousExperience);
-    }
+    Optional<MentorApplication> findByUser(User user);
+
+}

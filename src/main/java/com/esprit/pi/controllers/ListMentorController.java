@@ -32,9 +32,13 @@ public class ListMentorController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     public ResponseEntity<ListMentor> createListMentor(@RequestBody ListMentor listMentor) {
-        // The user and hackathon IDs should come from the request body
-        // No need to override here as they will be supplied by the client
-        ListMentor created = listMentorService.createListMentor(listMentor);
+
+        Long userId = listMentor.getMentor().getId();
+        Long hackathonId = listMentor.getHackathon().getId();
+        int numberOfTeams = listMentor.getNumberOfTeams();
+
+        // Call the service method with the extracted parameters
+        ListMentor created = listMentorService.createListMentor(userId, hackathonId, numberOfTeams);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
     // Read
@@ -83,15 +87,12 @@ public class ListMentorController {
         if (existingListMentor.isPresent()) {
             listMentor.setId(id);
             // From your backend controller
-            User mentor = new User();
-            mentor.setId(1L);
-            listMentor.setMentor(mentor);
 
-            Hackathon hackathon = new Hackathon();
-            hackathon.setId(1L);
-            listMentor.setHackathon(hackathon);
+            int numberOfTeams = listMentor.getNumberOfTeams();
 
-            ListMentor updated = listMentorService.updateListMentor(listMentor);
+
+
+            ListMentor updated = listMentorService.updateListMentor(id,numberOfTeams);
             return new ResponseEntity<>(updated, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

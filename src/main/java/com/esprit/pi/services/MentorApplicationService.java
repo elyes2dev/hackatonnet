@@ -151,7 +151,7 @@ public class MentorApplicationService {
                     }
                     user.getRoles().add(mentorRole);
                     userRepository.save(user);
-                sendStatusUpdateEmail(app, true);}
+                    sendStatusUpdateEmail(app, true);}
             }
             // If the application is rejected, send rejection email
             else if (newStatus == ApplicationStatus.REJECTED) {

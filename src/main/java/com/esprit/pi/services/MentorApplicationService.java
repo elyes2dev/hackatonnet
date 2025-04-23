@@ -1,11 +1,9 @@
 package com.esprit.pi.services;
 
-import com.esprit.pi.entities.ApplicationStatus;
-import com.esprit.pi.entities.MentorApplication;
-import com.esprit.pi.entities.PreviousExperience;
-import com.esprit.pi.entities.User;
+import com.esprit.pi.entities.*;
 import com.esprit.pi.repositories.MentorApplicationRepository;
 import com.esprit.pi.repositories.PreviousExperienceRepository;
+import com.esprit.pi.repositories.RoleRepository;
 import com.esprit.pi.repositories.UserRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -36,6 +34,9 @@ public class MentorApplicationService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     // Create
     @Transactional
@@ -143,11 +144,14 @@ public class MentorApplicationService {
             // If the application is approved, update the user to be a mentor
             if (newStatus == ApplicationStatus.APPROVED) {
                 User user = app.getUser();
-                // user.setMentor(true);************ to do when merged with user
-                userRepository.save(user);
-
-                // Send approval email
-                sendStatusUpdateEmail(app, true);
+                if (user != null) {
+                    Role mentorRole = roleRepository.findByName("MENTOR");
+                    if (mentorRole == null) {
+                        throw new RuntimeException("MENTOR role not found");
+                    }
+                    user.getRoles().add(mentorRole);
+                    userRepository.save(user);
+                sendStatusUpdateEmail(app, true);}
             }
             // If the application is rejected, send rejection email
             else if (newStatus == ApplicationStatus.REJECTED) {

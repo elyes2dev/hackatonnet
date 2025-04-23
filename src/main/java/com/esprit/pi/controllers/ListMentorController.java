@@ -19,7 +19,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/list-mentors")
 @Tag(name = "List Mentors", description = "APIs for managing hackathon mentors")
-@CrossOrigin("*")
 public class ListMentorController {
 
     @Autowired
@@ -33,19 +32,11 @@ public class ListMentorController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     public ResponseEntity<ListMentor> createListMentor(@RequestBody ListMentor listMentor) {
-        // Set static user ID 1 and hackathon ID 1
-        User mentor = new User();
-        mentor.setId(1L);
-        listMentor.setMentor(mentor);
-
-        Hackathon hackathon = new Hackathon();
-        hackathon.setId(1L);
-        listMentor.setHackathon(hackathon);
-
+        // The user and hackathon IDs should come from the request body
+        // No need to override here as they will be supplied by the client
         ListMentor created = listMentorService.createListMentor(listMentor);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
-
     // Read
     @GetMapping
     @Operation(summary = "Get all mentor listings")

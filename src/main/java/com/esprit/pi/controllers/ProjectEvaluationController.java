@@ -14,7 +14,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/project-evaluations")
-@CrossOrigin(origins = "http://localhost:4200")
 public class ProjectEvaluationController {
 
     @Autowired

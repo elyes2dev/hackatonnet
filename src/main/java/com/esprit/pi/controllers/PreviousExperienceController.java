@@ -17,7 +17,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/previous-experiences")
 @Tag(name = "Previous Experiences", description = "APIs for managing mentor's previous experiences")
-@CrossOrigin("*")
 public class PreviousExperienceController {
 
     @Autowired

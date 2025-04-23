@@ -20,7 +20,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/mentor-evaluations")
 @Tag(name = "Mentor Evaluations", description = "APIs for managing mentor evaluations")
-@CrossOrigin("*")
 public class MentorEvaluationController {
 
     @Autowired

@@ -65,6 +65,9 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
+    @JsonIgnoreProperties({
+            "users"
+    })
     private Set<Skill> skills = new HashSet<>();
 
 

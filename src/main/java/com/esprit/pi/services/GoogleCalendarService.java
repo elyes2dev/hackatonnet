@@ -6,7 +6,6 @@ import com.esprit.pi.entities.User;
 import com.esprit.pi.repositories.GoogleCalendarTokenRepository;
 import com.esprit.pi.repositories.IHackathonRepository;
 import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
@@ -14,23 +13,31 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
 
 @Service
 public class GoogleCalendarService {
+
+    private static final String APPLICATION_NAME = "HackathonNet";
+    private static final JacksonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+    private static final String CALENDAR_SCOPE = CalendarScopes.CALENDAR;
+    private static final String REDIRECT_URI = "http://localhost:9100/api/auth/google/callback";
 
     @Autowired
     private GoogleCalendarTokenRepository tokenRepository;
@@ -44,21 +51,60 @@ public class GoogleCalendarService {
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     private String clientSecret;
 
-    @Value("${app.frontend-url:http://localhost:4200}")
-    private String frontendUrl;
+    /**
+     * Get the Google authorization URL
+     */
+    public String getAuthorizationUrl(Long userId) {
+        return "https://accounts.google.com/o/oauth2/v2/auth?" +
+                "client_id=" + clientId +
+                "&redirect_uri=" + REDIRECT_URI +
+                "&response_type=code" +
+                "&scope=" + CALENDAR_SCOPE +
+                "&access_type=offline" +
+                "&prompt=consent" +
+                "&state=" + userId; // Pass userId in state
+    }
 
-    private static final String REDIRECT_URI = "http://localhost:9100/api/auth/google/callback";
-    private static final String APPLICATION_NAME = "HackathonNet";
-    private static final JacksonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+    /**
+     * Exchange authorization code for tokens
+     */
+    @Transactional
+    public void exchangeCodeForTokens(String authorizationCode, User user) throws IOException {
+        try {
+            NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
 
+            GoogleTokenResponse tokenResponse = new GoogleAuthorizationCodeTokenRequest(
+                    transport,
+                    JSON_FACTORY,
+                    clientId,
+                    clientSecret,
+                    authorizationCode,
+                    REDIRECT_URI)
+                    .execute();
 
+            // Save the tokens
+            saveToken(
+                    user,
+                    tokenResponse.getAccessToken(),
+                    tokenResponse.getRefreshToken(),
+                    tokenResponse.getExpiresInSeconds()
+            );
+        } catch (Exception e) {
+            throw new IOException("Failed to exchange code for tokens: " + e.getMessage(), e);
+        }
+    }
 
+    /**
+     * Save or update a token
+     */
+    @Transactional
     public void saveToken(User user, String accessToken, String refreshToken, Long expiresIn) {
         GoogleCalendarToken token = tokenRepository.findByUser(user)
                 .orElse(new GoogleCalendarToken());
 
         token.setUser(user);
         token.setAccessToken(accessToken);
+        token.setExpiresIn(expiresIn);
 
         // Only update refresh token if a new one is provided
         if (refreshToken != null && !refreshToken.isEmpty()) {
@@ -74,68 +120,37 @@ public class GoogleCalendarService {
         tokenRepository.save(token);
     }
 
-    public void exchangeCodeForTokens(String authorizationCode, User user) throws IOException, GeneralSecurityException {
-        try {
-            NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
-
-            GoogleTokenResponse tokenResponse = new GoogleAuthorizationCodeTokenRequest(
-                    transport,
-                    JSON_FACTORY,
-                    clientId,
-                    clientSecret,
-                    authorizationCode,
-                    REDIRECT_URI)
-                    .execute();
-
-            // Log token details for debugging
-            System.out.println("Access Token: " + tokenResponse.getAccessToken());
-            System.out.println("Refresh Token: " + tokenResponse.getRefreshToken());
-            System.out.println("Expires In: " + tokenResponse.getExpiresInSeconds());
-
-            // Save the tokens
-            saveToken(
-                    user,
-                    tokenResponse.getAccessToken(),
-                    tokenResponse.getRefreshToken(),
-                    tokenResponse.getExpiresInSeconds()
-            );
-        } catch (IOException | GeneralSecurityException e) {
-            System.err.println("Failed to exchange code for tokens: " + e.getMessage());
-            throw e;
-        }
-    }
-
+    /**
+     * Check if a user has a valid token
+     */
     public boolean hasValidToken(User user) {
         Optional<GoogleCalendarToken> tokenOpt = tokenRepository.findByUser(user);
         if (tokenOpt.isEmpty()) {
-            System.out.println("No token found for user: " + user.getId());
             return false;
         }
 
         GoogleCalendarToken token = tokenOpt.get();
-        if (token.getAccessToken() == null) {
-            System.out.println("No access token for user: " + user.getId());
+        if (token.getAccessToken() == null || token.getRefreshToken() == null) {
             return false;
         }
 
         Date expiresAt = token.getExpiresAt();
         if (expiresAt == null) {
-            System.out.println("No expiration time for user: " + user.getId());
             return false;
         }
 
         boolean isValid = expiresAt.after(new Date());
         if (!isValid) {
-            System.out.println("Token expired for user: " + user.getId() + " at " + expiresAt);
             return refreshTokenIfNeeded(user);
         }
 
         return true;
     }
 
-
-
-
+    /**
+     * Refresh an expired token
+     */
+    @Transactional
     public boolean refreshTokenIfNeeded(User user) {
         GoogleCalendarToken token = tokenRepository.findByUser(user).orElse(null);
 
@@ -173,6 +188,9 @@ public class GoogleCalendarService {
         return true;
     }
 
+    /**
+     * Get a Google Calendar service instance
+     */
     public Calendar getCalendarService(User user) throws GeneralSecurityException, IOException {
         GoogleCalendarToken token = tokenRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("No Google Calendar token found for user"));
@@ -195,8 +213,11 @@ public class GoogleCalendarService {
                 .build();
     }
 
-    public Event createEvent(User user, String title, String description,
-                             LocalDateTime startDateTime, LocalDateTime endDateTime)
+    /**
+     * Create a calendar event
+     */
+    public String createEvent(User user, String title, String description,
+                              LocalDateTime startDateTime, LocalDateTime endDateTime)
             throws GeneralSecurityException, IOException {
 
         // Ensure token is valid
@@ -213,15 +234,21 @@ public class GoogleCalendarService {
         Date startDate = Date.from(startDateTime.atZone(ZoneId.systemDefault()).toInstant());
         Date endDate = Date.from(endDateTime.atZone(ZoneId.systemDefault()).toInstant());
 
-        event.setStart(new EventDateTime().setDateTime(new com.google.api.client.util.DateTime(startDate)));
-        event.setEnd(new EventDateTime().setDateTime(new com.google.api.client.util.DateTime(endDate)));
+        event.setStart(new EventDateTime().setDateTime(new DateTime(startDate)));
+        event.setEnd(new EventDateTime().setDateTime(new DateTime(endDate)));
 
-        return calendarService.events()
+        // Insert the event
+        Event createdEvent = calendarService.events()
                 .insert("primary", event)
                 .execute();
+
+        return createdEvent.getId();
     }
 
-    public Event addHackathonToCalendar(User user, Long hackathonId, int numberOfTeams)
+    /**
+     * Add a hackathon event to the calendar
+     */
+    public String addHackathonEventToCalendar(User user, Long hackathonId, int numberOfTeams)
             throws GeneralSecurityException, IOException {
 
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
@@ -241,4 +268,7 @@ public class GoogleCalendarService {
 
         return createEvent(user, eventTitle, eventDescription, startDateTime, endDateTime);
     }
+
+
+
 }

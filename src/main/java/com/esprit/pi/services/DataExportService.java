@@ -5,6 +5,7 @@ import com.esprit.pi.repositories.ListMentorRepository;
 import com.esprit.pi.repositories.MentorApplicationRepository;
 import com.esprit.pi.repositories.TeamRepository;
 import com.esprit.pi.repositories.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -62,6 +63,10 @@ public class DataExportService {
                 .map(ListMentor::getMentor)
                 .collect(Collectors.toList());
 
+        if (mentors.isEmpty()) {
+            throw new IllegalArgumentException("No mentors found for hackathon ID: " + hackathonId);
+        }
+
         List<String> availableMentorIds = mentors.stream()
                 .map(user -> user.getId().toString())
                 .collect(Collectors.toList());
@@ -88,9 +93,9 @@ public class DataExportService {
             mentorMap.put("experience_years", experienceYears);
             mentorMap.put("rating", rating);
             mentorMap.put("user_id", mentor.getId().toString());
-            mentorMap.put("skills", mentor.getSkills().stream()
-                    .map(Skill::getName)
-                    .collect(Collectors.toList()));
+            mentorMap.put("skills", mentor.getSkills().isEmpty() ?
+                    Collections.singletonList("General") : // Default skill if none
+                    mentor.getSkills().stream().map(Skill::getName).collect(Collectors.toList()));
             mentorMap.put("name", mentor.getName() + " " + (mentor.getLastname() != null ? mentor.getLastname() : ""));
             return mentorMap;
         }).collect(Collectors.toList());
@@ -107,6 +112,15 @@ public class DataExportService {
         Set<Skill> allSkills = mentors.stream()
                 .flatMap(mentor -> mentor.getSkills().stream())
                 .collect(Collectors.toSet());
+
+        // If no skills, add a default skill
+        if (allSkills.isEmpty()) {
+            Skill defaultSkill = new Skill();
+            defaultSkill.setId(1L);
+            defaultSkill.setName("General");
+            allSkills.add(defaultSkill);
+        }
+
         List<Map<String, Object>> tagData = allSkills.stream().map(skill -> {
             Map<String, Object> tagMap = new HashMap<>();
             tagMap.put("tag_id", skill.getId().toString());
@@ -115,14 +129,17 @@ public class DataExportService {
         }).collect(Collectors.toList());
 
         // Prepare mentor_tags data
-        List<Map<String, Object>> mentorTagData = mentors.stream().flatMap(mentor ->
-                mentor.getSkills().stream().map(skill -> {
-                    Map<String, Object> tagMap = new HashMap<>();
-                    tagMap.put("mentor_id", mentor.getId().toString());
-                    tagMap.put("tag_id", skill.getId().toString());
-                    return tagMap;
-                })
-        ).collect(Collectors.toList());
+        List<Map<String, Object>> mentorTagData = mentors.stream().flatMap(mentor -> {
+            Set<Skill> skills = mentor.getSkills().isEmpty() ?
+                    Collections.singleton(new Skill(1L, "General", null, null)) : // Default skill
+                    mentor.getSkills();
+            return skills.stream().map(skill -> {
+                Map<String, Object> tagMap = new HashMap<>();
+                tagMap.put("mentor_id", mentor.getId().toString());
+                tagMap.put("tag_id", skill.getId().toString());
+                return tagMap;
+            });
+        }).collect(Collectors.toList());
 
         // Prepare request body
         Map<String, Object> requestBody = new HashMap<>();
@@ -137,6 +154,9 @@ public class DataExportService {
             put("tags", tagData);
             put("mentor_tags", mentorTagData);
         }});
+
+        // Log the request body for debugging
+        System.out.println("Request body: " + new ObjectMapper().writeValueAsString(requestBody));
 
         // Send request to Flask API
         HttpHeaders headers = new HttpHeaders();

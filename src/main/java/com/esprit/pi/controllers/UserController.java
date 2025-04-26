@@ -7,10 +7,13 @@ import com.esprit.pi.repositories.UserRepository;
 import com.esprit.pi.services.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.esprit.pi.services.UserService;
 
 
+import java.beans.Encoder;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -30,6 +33,8 @@ public class UserController {
         return userService.getAllUsers();
     }
 
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         Optional<User> user = userService.getUserById(id);
@@ -38,6 +43,8 @@ public class UserController {
 
     @PostMapping
     public User createUser(@RequestBody User user) {
+        String unsecurePaswword = user.getPassword();
+        user.setPassword(encoder.encode(unsecurePaswword));
         return userService.createUser(user);
     }
 

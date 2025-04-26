@@ -29,13 +29,47 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    public void sendRecoveryEmail(String toEmail,String token) {
+    /*public void sendRecoveryEmail(String toEmail,String token) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
         message.setSubject("Email Verification Code");
-        message.setText("Recovery" + "http://localhost:9100/pi/auth/changePassword?token=" + token );
+        message.setText("Recovery Email : " + "http://localhost:9100/auth/changePassword?token=" + token );
         mailSender.send(message);
+    }*/
+
+    public void sendRecoveryEmail(String toEmail, String token) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            String resetLink = "http://localhost:9100/auth/changePassword?token=" + token;
+
+            String htmlMsg = "<!DOCTYPE html>" +
+                    "<html>" +
+                    "<head><style>" +
+                    "  .btn { background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }" +
+                    "  .container { font-family: Arial, sans-serif; padding: 20px; }" +
+                    "</style></head>" +
+                    "<body>" +
+                    "<div class='container'>" +
+                    "<h2>Password Recovery</h2>" +
+                    "<p>Click the button below to reset your password:</p>" +
+                    "<a href='" + resetLink + "' class='btn'>Reset Password</a>" +
+                    "<p>If you didn’t request this, please ignore this email.</p>" +
+                    "</div>" +
+                    "</body></html>";
+
+            helper.setTo(toEmail);
+            helper.setSubject("Reset Your Password");
+            helper.setText(htmlMsg, true);
+
+            mailSender.send(mimeMessage);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+
+        }
     }
+
 
     // ✅ Updated email sender to attach the image correctly
     public void sendEmailWithLogo(String to, String subject, String content) {

@@ -1,6 +1,9 @@
 package com.esprit.pi.configs;
 
 import com.esprit.pi.repositories.UserRepository;
+import com.esprit.pi.services.JwtUtility;
+import com.esprit.pi.utility.OAuth2AuthenticationSuccessHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -11,8 +14,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import javax.crypto.SecretKey;
 
 @Configuration
 @EnableWebSecurity
@@ -21,10 +28,14 @@ public class SecurityConfiguration {
     JwtFilter jwtFilter;
     UserRepository userRepository;
 
-    public SecurityConfiguration(JwtFilter jwtFilter, UserRepository userRepository) {
+    @Autowired
+    private final OAuth2AuthenticationSuccessHandler successHandler;
+
+    public SecurityConfiguration(JwtFilter jwtFilter, UserRepository userRepository, OAuth2AuthenticationSuccessHandler successHandler) {
         // Auto inject dependent beans
         this.jwtFilter = jwtFilter;
         this.userRepository = userRepository;
+        this.successHandler = successHandler;
     }
 
 
@@ -34,12 +45,13 @@ public class SecurityConfiguration {
         return http
                 .cors()
                 .and()
-                .securityMatcher("/api/**", "/auth/**","/**")
+                .securityMatcher("/api/**", "/auth/**","/**","/login/**")
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> {
-                    request.requestMatchers("/api/open/**", "/auth/**","/**").permitAll();
+                    request.requestMatchers("/api/open/**", "/auth/**","/**","/login/**","/certificates/download").permitAll();
                     request.anyRequest().authenticated();
                 })
+                .oauth2ResourceServer(rs -> rs.jwt())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
@@ -83,5 +95,11 @@ public class SecurityConfiguration {
     @Bean
     public PasswordEncoder getPasswordEncoder() {
         return NoOpPasswordEncoder.getInstance();
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder(JwtUtility jwtUtility) {
+        SecretKey key = jwtUtility.getSignInKey(); // you'll need to make getSignInKey() public
+        return NimbusJwtDecoder.withSecretKey(key).build();
     }
 }

@@ -19,7 +19,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/list-mentors")
 @Tag(name = "List Mentors", description = "APIs for managing hackathon mentors")
-@CrossOrigin("*")
 public class ListMentorController {
 
     @Autowired
@@ -33,19 +32,15 @@ public class ListMentorController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     public ResponseEntity<ListMentor> createListMentor(@RequestBody ListMentor listMentor) {
-        // Set static user ID 1 and hackathon ID 1
-        User mentor = new User();
-        mentor.setId(1L);
-        listMentor.setMentor(mentor);
 
-        Hackathon hackathon = new Hackathon();
-        hackathon.setId(1L);
-        listMentor.setHackathon(hackathon);
+        Long userId = listMentor.getMentor().getId();
+        Long hackathonId = listMentor.getHackathon().getId();
+        int numberOfTeams = listMentor.getNumberOfTeams();
 
-        ListMentor created = listMentorService.createListMentor(listMentor);
+        // Call the service method with the extracted parameters
+        ListMentor created = listMentorService.createListMentor(userId, hackathonId, numberOfTeams);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
-
     // Read
     @GetMapping
     @Operation(summary = "Get all mentor listings")
@@ -92,15 +87,12 @@ public class ListMentorController {
         if (existingListMentor.isPresent()) {
             listMentor.setId(id);
             // From your backend controller
-            User mentor = new User();
-            mentor.setId(1L);
-            listMentor.setMentor(mentor);
 
-            Hackathon hackathon = new Hackathon();
-            hackathon.setId(1L);
-            listMentor.setHackathon(hackathon);
+            int numberOfTeams = listMentor.getNumberOfTeams();
 
-            ListMentor updated = listMentorService.updateListMentor(listMentor);
+
+
+            ListMentor updated = listMentorService.updateListMentor(id,numberOfTeams);
             return new ResponseEntity<>(updated, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

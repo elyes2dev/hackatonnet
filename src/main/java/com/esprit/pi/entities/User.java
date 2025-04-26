@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.jdbc.Work;
@@ -23,6 +24,7 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class User implements UserDetails {
 
@@ -63,6 +65,9 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
+    @JsonIgnoreProperties({
+            "users"
+    })
     private Set<Skill> skills = new HashSet<>();
 
 
@@ -78,6 +83,7 @@ public class User implements UserDetails {
     private SponsorApplication sponsorApplication;
 
     @OneToOne(mappedBy = "sponsor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private SponsorReward sponsorReward;
 
     // Many-to-many relationship with Team through TeamMembers
@@ -116,6 +122,8 @@ public class User implements UserDetails {
     public BadgeLevel getBadge() {
         return badge;
     }
+
+   
 
     public enum BadgeLevel {
         JUNIOR_COACH,

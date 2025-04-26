@@ -3,6 +3,7 @@ package com.esprit.pi.services;
 import com.esprit.pi.entities.Hackathon;
 import com.esprit.pi.entities.Team;
 import com.esprit.pi.entities.TeamMembers;
+import com.esprit.pi.entities.User;
 import com.esprit.pi.repositories.IHackathonRepository;
 import com.esprit.pi.repositories.TeamRepository;
 import com.esprit.pi.repositories.TeamMembersRepository;
@@ -203,5 +204,37 @@ public class TeamService implements ITeamService {
     @Override
     public List<Team> getAvailablePublicTeams() {
         return teamRepository.findByIsPublicTrueAndIsFullFalse();
+    }
+
+
+
+    public void assignMentorToTeam(Long teamId, Long mentorId) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new IllegalArgumentException("Team not found"));
+        User mentor = userRepository.findById(mentorId)
+                .orElseThrow(() -> new IllegalArgumentException("Mentor not found"));
+
+        // Check if mentor has MENTOR role
+        boolean isMentor = ((User) mentor).getRoles().stream()
+                .anyMatch(role -> role.getName().equals("MENTOR"));
+        if (!isMentor) {
+            throw new IllegalArgumentException("User is not a mentor");
+        }
+
+        // Check if team already has a mentor
+        boolean hasMentor = team.getTeamMembers().stream()
+                .anyMatch(tm -> tm.getRole().equals(TeamMembers.Role.MENTOR));
+        if (hasMentor) {
+            throw new IllegalStateException("Team already has a mentor");
+        }
+
+        // Assign mentor
+        TeamMembers teamMember = new TeamMembers();
+        teamMember.setTeam(team);
+        teamMember.setUser(mentor);
+        teamMember.setRole(TeamMembers.Role.MENTOR);
+        team.getTeamMembers().add(teamMember);
+
+        teamRepository.save(team);
     }
 }

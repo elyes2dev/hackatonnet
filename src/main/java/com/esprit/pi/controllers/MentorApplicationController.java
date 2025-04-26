@@ -11,7 +11,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas
+
+        .annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -24,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +33,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/mentor-applications")
 @Tag(name = "Mentor Applications", description = "APIs for mentor application management")
-@CrossOrigin("*")
 public class MentorApplicationController {
 
     @Autowired
@@ -46,13 +46,15 @@ public class MentorApplicationController {
     private UserRepository userRepository;
 
     // Create
-    @PostMapping
-    @Operation(summary = "Create a new mentor application with file upload")
+    @PostMapping("/{userId}/submit")
+    @Operation(summary = "Create a new mentor application with file upload for a specific user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Application created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data")
+            @ApiResponse(responseCode = "400", description = "Invalid input data or user not found"),
+            @ApiResponse(responseCode = "404", description = "User not found")
     })
     public ResponseEntity<MentorApplication> createApplication(
+            @PathVariable Long userId,
             @Parameter(
                     description = "Mentor application details",
                     schema = @Schema(implementation = MentorApplication.class)
@@ -63,18 +65,19 @@ public class MentorApplicationController {
             @Parameter(description = "Upload paper (optional)", content = @Content(mediaType = "application/pdf"))
             @RequestParam(value = "uploadPaperFile", required = false) MultipartFile uploadPaperFile) {
         try {
-            // Static user assignment
-            User staticUser = userRepository.findById(1L).orElse(null);
-            if (staticUser == null) {
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // Or throw an error
-            }
+            // Fetch user by userId
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
-            application.setUser(staticUser); // Assuming MentorApplication has a `user` field
+            // Set the user in the application
+            application.setUser(user);
 
             MentorApplication created = applicationService.createApplication(application, cvFile, uploadPaperFile);
             return new ResponseEntity<>(created, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         } catch (IOException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -229,5 +232,4 @@ public class MentorApplicationController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
 }

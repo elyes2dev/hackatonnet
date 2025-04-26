@@ -45,7 +45,7 @@ public class WorkshopController {
         // Save the workshop
         Workshop savedWorkshop = workshopService.addWorkshop(workshop);
         // Send email to the creator
-    //    sendWorkshopCreatedEmail(savedWorkshop,user);
+        //   sendWorkshopCreatedEmail(savedWorkshop,user);
         System.out.println("------------------------------------------------------------------------------------------------------------");
         System.out.println(user.getEmail());
         System.out.println(savedWorkshop.getName());

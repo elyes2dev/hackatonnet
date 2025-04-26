@@ -51,10 +51,9 @@ public class UserService implements IUserService {
     @Override
     public User createUser(User user) {
         // Check if roles are provided; otherwise, assign a default role
-        if (user.getRoles().isEmpty()) {
-            Role defaultRole = roleRepository.findByName("ROLE_USER");
-            user.getRoles().add(defaultRole);
-        }
+
+        Role defaultRole = roleRepository.findByName("ROLE_USER");
+        user.getRoles().add(defaultRole);
 
         return userRepository.save(user);
     }
@@ -155,4 +154,6 @@ public class UserService implements IUserService {
         // Save and return
         return userRepository.save(user);
     }
+
+
 }

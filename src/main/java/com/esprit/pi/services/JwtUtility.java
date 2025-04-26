@@ -49,7 +49,7 @@ public class JwtUtility {
                 .getPayload();
     }
 
-    private SecretKey getSignInKey() {
+    public SecretKey getSignInKey() {
         byte[] keyBytes = SECRET_KEY.getBytes();
         return Keys.hmacShaKeyFor(keyBytes);
     }

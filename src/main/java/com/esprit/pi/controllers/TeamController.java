@@ -144,7 +144,7 @@ public class TeamController {
         }
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/update-team/{id}")
     public ResponseEntity<Team> updateTeam(
             @PathVariable Long id,
             @RequestBody Team team) {

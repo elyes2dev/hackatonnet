@@ -193,7 +193,11 @@ public class TeamService implements ITeamService {
         if (team.getId() == null) {
             throw new RuntimeException("Team ID cannot be null for update operation");
         }
-        return teamRepository.save(team);
+        Optional<Team> optionalTeam = teamRepository.findById(team.getId());
+        Team updatedteam = optionalTeam.get();
+        updatedteam.setTeamName(team.getTeamName());
+        updatedteam.setIsPublic(team.getIsPublic());
+        return teamRepository.save(updatedteam);
     }
 
     @Override

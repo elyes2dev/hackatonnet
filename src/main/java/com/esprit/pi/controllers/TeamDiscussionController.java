@@ -45,31 +45,7 @@ public class TeamDiscussionController {
     private final JwtUtility jwtUtility;
     private final UserRepository userRepository;
     private static final String UPLOAD_DIR = "uploads/";
-    @PostMapping("/upload")
-    public ResponseEntity<?> uploadFile(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("teamMemberId") Long teamMemberId,
-            @RequestParam("teamId") Long teamId
-    ) throws IOException {
-        // Save file to disk
-        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-        Path uploadPath = Paths.get("uploads");
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-        Path filePath = uploadPath.resolve(fileName);
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-        // Construct file URL (adjust port if needed)
-        String fileUrl = "http://localhost:9100/uploads/" + fileName;
-
-        // Save discussion using your service (this ensures DB persistence)
-        TeamDiscussion discussion = teamDiscussionService.createDiscussion(
-                teamMemberId, fileUrl, ChatMessageDTO.TeamDiscussionType.FILE
-        );
-
-        return ResponseEntity.ok(discussion);
-    }
     @Autowired
     public TeamDiscussionController(ITeamDiscussionService teamDiscussionService,
                                     ITeamMembersService teamMembersService,
@@ -83,13 +59,36 @@ public class TeamDiscussionController {
         this.userRepository = userRepository;
     }
 
+    // --- FILE UPLOAD ---
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("teamMemberId") Long teamMemberId,
+            @RequestParam("teamId") Long teamId
+    ) throws IOException {
+        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+        Path uploadPath = Paths.get("uploads");
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        Path filePath = uploadPath.resolve(fileName);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        String fileUrl = "http://localhost:9100/uploads/" + fileName;
+        TeamDiscussion discussion = teamDiscussionService.createDiscussion(
+                teamMemberId, fileUrl, ChatMessageDTO.TeamDiscussionType.FILE
+        );
+
+        return ResponseEntity.ok(discussion);
+    }
+
+    // --- SEND MESSAGE REST ---
     @PostMapping("/send/{teamId}")
     public ResponseEntity<?> sendMessageRest(
             @PathVariable Long teamId,
             @RequestParam Long teamMemberId,
             @RequestParam(defaultValue = "TEXT") ChatMessageDTO.TeamDiscussionType messageType,
-            @RequestBody Map<String, String> payload,
-            @RequestHeader("Authorization") String authorizationHeader) {
+            @RequestBody Map<String, String> payload) {
         logger.info("Entering sendMessageRest: teamId={}, teamMemberId={}", teamId, teamMemberId);
 
         try {
@@ -99,14 +98,6 @@ public class TeamDiscussionController {
                         .body(Map.of("error", "Message is required in payload"));
             }
 
-            String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
-            if (jwtUtility.isTokenExpired(token)) {
-                logger.warn("Token expired: {}", token);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Token expired"));
-            }
-
-            String username = jwtUtility.getUserName(token);
             TeamMembers teamMember = teamMembersService.findTeamMemberById(teamMemberId);
             if (teamMember.getUser().getUsername() == null) {
                 logger.error("User for teamMemberId={} has null username", teamMemberId);
@@ -119,8 +110,6 @@ public class TeamDiscussionController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of("error", "User is not a member of this team"));
             }
-            logger.info("Validation passed: teamMemberId={}, username={}, jwtUsername={}",
-                    teamMemberId, teamMember.getUser().getUsername(), username);
 
             String message = payload.get("message").trim();
             if (message.isEmpty()) {
@@ -141,6 +130,67 @@ public class TeamDiscussionController {
                     .body(Map.of("error", "Failed to send message: " + e.getMessage()));
         }
     }
+
+    // --- TYPING NOTIFICATION REST ENDPOINT ---
+    @PostMapping("/{teamId}/typing")
+    public ResponseEntity<?> typingNotification(
+            @PathVariable Long teamId,
+            @RequestParam Long teamMemberId,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        try {
+            logger.info("Received typing notification: teamId={}, teamMemberId={}, AuthorizationHeaderPresent={}", teamId, teamMemberId, authorizationHeader != null);
+            // Parameter validation
+            if (teamMemberId == null) {
+                logger.warn("Missing teamMemberId in typing notification request");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "teamMemberId is required"));
+            }
+            // Optional: JWT validation
+            if (authorizationHeader != null && !authorizationHeader.isEmpty()) {
+                String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
+                if (jwtUtility.isTokenExpired(token)) {
+                    logger.warn("Token expired for typing notification: teamMemberId={}, teamId={}", teamMemberId, teamId);
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(Map.of("error", "Token expired"));
+                }
+            } else {
+                logger.info("No Authorization header provided for typing notification (allowed, but not recommended)");
+            }
+            // Validate team membership
+            TeamMembers teamMember = teamMembersService.findTeamMemberById(teamMemberId);
+            if (teamMember == null) {
+                logger.warn("No TeamMember found for teamMemberId={}", teamMemberId);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Invalid teamMemberId: not found"));
+            }
+            if (!teamMember.getTeam().getId().equals(teamId)) {
+                logger.warn("Team membership validation failed: teamMemberId={}, memberTeamId={}, requestedTeamId={}",
+                        teamMemberId, teamMember.getTeam().getId(), teamId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "User is not a member of this team"));
+            }
+            // Broadcast typing event via WebSocket
+            ChatMessageDTO typingMsg = new ChatMessageDTO();
+            typingMsg.setType(ChatMessageDTO.MessageType.TYPING);
+            typingMsg.setSenderName(teamMember.getUser().getUsername());
+            typingMsg.setTeamMemberId(teamMemberId);
+            typingMsg.setUserId(teamMember.getUser().getId());
+            typingMsg.setCreatedAt(new java.util.Date());
+            typingMsg.setMessageType(ChatMessageDTO.TeamDiscussionType.TEXT);
+            messagingTemplate.convertAndSend("/topic/team/" + teamId + "/typing", typingMsg);
+            logger.info("Typing notification broadcasted to /topic/team/{}/typing by user {} (teamMemberId={})", teamId, typingMsg.getSenderName(), teamMemberId);
+            return ResponseEntity.ok(Map.of(
+                    "message", "Typing notification received",
+                    "timestamp", new java.util.Date().toString()
+            ));
+        } catch (Exception e) {
+            logger.error("Failed to process typing notification: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to process typing notification: " + e.getMessage()));
+        }
+    }
+
+    // --- INFO, GET, PARTICIPANTS, MARK AS READ, DELETE, UNREAD COUNT ---
 
     @GetMapping("/info")
     public ResponseEntity<Map<String, String>> getChatInfo(@RequestHeader("Authorization") String authorizationHeader) {
@@ -181,62 +231,6 @@ public class TeamDiscussionController {
                 "participants", usernames,
                 "timestamp", new Date().toString()
         ));
-    }
-
-    @MessageMapping("/chat.sendMessage/{teamId}")
-    @SendTo("/topic/team/{teamId}")
-    public ChatMessageDTO sendMessage(@Payload ChatMessageDTO chatMessage,
-                                      @DestinationVariable Long teamId) {
-        if (chatMessage.getTeamMemberId() == null) {
-            return errorMessage("Team member ID is required");
-        }
-        TeamMembers teamMember = teamMembersService.findTeamMemberById(chatMessage.getTeamMemberId());
-        if (teamMember.getUser().getUsername() == null) {
-            return errorMessage("Invalid user data: username is missing");
-        }
-        if (!teamMember.getTeam().getId().equals(teamId)) {
-            return errorMessage("User is not a member of this team");
-        }
-
-        TeamDiscussion discussion = teamDiscussionService.createDiscussion(
-                chatMessage.getTeamMemberId(),
-                chatMessage.getMessage(),
-                chatMessage.getMessageType()
-        );
-        return buildChatMessageDTO(discussion, teamMember.getUser().getUsername());
-    }
-
-    @MessageMapping("/chat.addUser/{teamId}")
-    @SendTo("/topic/team/{teamId}")
-    public ChatMessageDTO addUser(
-            @Payload ChatMessageDTO chatMessage,
-            @DestinationVariable Long teamId,
-            SimpMessageHeaderAccessor headerAccessor) {
-        if (chatMessage.getTeamMemberId() == null) {
-            return errorMessage("Team member ID is required");
-        }
-        TeamMembers teamMember = teamMembersService.findTeamMemberById(chatMessage.getTeamMemberId());
-        if (teamMember.getUser().getUsername() == null) {
-            return errorMessage("Invalid user data: username is missing");
-        }
-        if (!teamMember.getTeam().getId().equals(teamId)) {
-            return errorMessage("User is not a member of this team");
-        }
-
-        String username = teamMember.getUser().getUsername();
-        headerAccessor.getSessionAttributes().put("username", username);
-        headerAccessor.getSessionAttributes().put("teamId", teamId);
-
-        ChatMessageDTO joinMessage = new ChatMessageDTO();
-        joinMessage.setType(ChatMessageDTO.MessageType.JOIN);
-        joinMessage.setSenderName(username);
-        joinMessage.setMessage(username + " joined the conversation");
-        joinMessage.setTeamMemberId(chatMessage.getTeamMemberId());
-        joinMessage.setUserId(teamMember.getUser().getId());
-        joinMessage.setCreatedAt(new Date());
-        joinMessage.setMessageType(ChatMessageDTO.TeamDiscussionType.TEXT);
-        joinMessage.setIsRead(true);
-        return joinMessage;
     }
 
     @PutMapping("/{discussionId}/read")
@@ -294,6 +288,87 @@ public class TeamDiscussionController {
         }
     }
 
+    // --- WEBSOCKET MESSAGE HANDLERS ---
+
+    @MessageMapping("/chat.sendMessage/{teamId}")
+    @SendTo("/topic/team/{teamId}")
+    public ChatMessageDTO sendMessage(@Payload ChatMessageDTO chatMessage,
+                                      @DestinationVariable Long teamId) {
+        if (chatMessage.getTeamMemberId() == null) {
+            return errorMessage("Team member ID is required");
+        }
+        TeamMembers teamMember = teamMembersService.findTeamMemberById(chatMessage.getTeamMemberId());
+        if (teamMember.getUser().getUsername() == null) {
+            return errorMessage("Invalid user data: username is missing");
+        }
+        if (!teamMember.getTeam().getId().equals(teamId)) {
+            return errorMessage("User is not a member of this team");
+        }
+
+        TeamDiscussion discussion = teamDiscussionService.createDiscussion(
+                chatMessage.getTeamMemberId(),
+                chatMessage.getMessage(),
+                chatMessage.getMessageType()
+        );
+        return buildChatMessageDTO(discussion, teamMember.getUser().getUsername());
+    }
+
+    @MessageMapping("/chat.addUser/{teamId}")
+    @SendTo("/topic/team/{teamId}")
+    public ChatMessageDTO addUser(
+            @Payload ChatMessageDTO chatMessage,
+            @DestinationVariable Long teamId,
+            SimpMessageHeaderAccessor headerAccessor) {
+        if (chatMessage.getTeamMemberId() == null) {
+            return errorMessage("Team member ID is required");
+        }
+        TeamMembers teamMember = teamMembersService.findTeamMemberById(chatMessage.getTeamMemberId());
+        if (teamMember.getUser().getUsername() == null) {
+            return errorMessage("Invalid user data: username is missing");
+        }
+        if (!teamMember.getTeam().getId().equals(teamId)) {
+            return errorMessage("User is not a member of this team");
+        }
+
+        String username = teamMember.getUser().getUsername();
+        headerAccessor.getSessionAttributes().put("username", username);
+        headerAccessor.getSessionAttributes().put("teamId", teamId);
+
+        ChatMessageDTO joinMessage = new ChatMessageDTO();
+        joinMessage.setType(ChatMessageDTO.MessageType.JOIN);
+        joinMessage.setSenderName(username);
+        joinMessage.setMessage(username + " joined the conversation");
+        joinMessage.setTeamMemberId(chatMessage.getTeamMemberId());
+        joinMessage.setUserId(teamMember.getUser().getId());
+        joinMessage.setCreatedAt(new Date());
+        joinMessage.setMessageType(ChatMessageDTO.TeamDiscussionType.TEXT);
+        joinMessage.setIsRead(true);
+        return joinMessage;
+    }
+
+    // --- WEBSOCKET TYPING HANDLER ---
+    @MessageMapping("/chat.typing/{teamId}")
+    @SendTo("/topic/team/{teamId}/typing")
+    public ChatMessageDTO typingWebSocket(@Payload ChatMessageDTO chatMessage, @DestinationVariable Long teamId) {
+        if (chatMessage.getTeamMemberId() == null) {
+            return errorMessage("Team member ID is required");
+        }
+        TeamMembers teamMember = teamMembersService.findTeamMemberById(chatMessage.getTeamMemberId());
+        if (teamMember == null || teamMember.getUser().getUsername() == null) {
+            return errorMessage("Invalid user data: username is missing");
+        }
+        if (!teamMember.getTeam().getId().equals(teamId)) {
+            return errorMessage("User is not a member of this team");
+        }
+        chatMessage.setType(ChatMessageDTO.MessageType.TYPING);
+        chatMessage.setSenderName(teamMember.getUser().getUsername());
+        chatMessage.setUserId(teamMember.getUser().getId());
+        chatMessage.setCreatedAt(new Date());
+        chatMessage.setMessageType(ChatMessageDTO.TeamDiscussionType.TEXT);
+        return chatMessage;
+    }
+
+    // --- HELPERS ---
     private ChatMessageDTO buildChatMessageDTO(TeamDiscussion discussion, String senderName) {
         ChatMessageDTO dto = new ChatMessageDTO();
         dto.setId(discussion.getId());

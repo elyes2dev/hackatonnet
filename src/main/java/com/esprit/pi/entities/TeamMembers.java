@@ -29,7 +29,7 @@ public class TeamMembers {
     private Team team;
 
     @ManyToOne
-    @JsonIgnore
+//    @JsonIgnore
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 

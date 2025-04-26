@@ -23,7 +23,8 @@ public class ChatMessageDTO {
         CHAT,
         JOIN,
         ERROR,
-        LEAVE
+        LEAVE,
+        TYPING
     }
 
     public enum TeamDiscussionType {

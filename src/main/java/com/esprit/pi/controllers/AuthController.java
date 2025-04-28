@@ -69,12 +69,27 @@ public class AuthController {
         Map<String, String> response = new HashMap<>();
         try {
             log.info("Signup attempt for user: {}", user.getName());
+
+            // Process roles correctly before creating user
+            Set<Role> userRoles = new HashSet<>();
+            if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+                for (Role role : user.getRoles()) {
+                    // Find existing role by name
+                    Role existingRole = roleRepository.findByName(role.getName());
+
+                    userRoles.add(existingRole);
+                }
+                // Replace the roles collection with the existing roles from DB
+                user.setRoles(userRoles);
+            }
+
             userController.createUser(user);
             response.put("message", "User registered successfully");
         } catch (Exception e) {
             log.error("Signup failed for user: {}. Reason: {}", user.getName(), e.getMessage(), e);
-            response.put("error", "Signup failed");
+            response.put("error", "Signup failed: " + e.getMessage());
         }
+
         return response;
     }
 

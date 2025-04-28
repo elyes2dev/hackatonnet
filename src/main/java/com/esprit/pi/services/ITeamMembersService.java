@@ -11,4 +11,6 @@ public interface ITeamMembersService {
     TeamMembers updateTeamMember(TeamMembers teamMember);
     TeamMembers findTeamMemberById(Long id);
     List<TeamMembers> findMembersByTeamId(Long teamId);
+    List<TeamMembers> findAllTeamMembersByUserId(Long userId); // Add this line
+
 }

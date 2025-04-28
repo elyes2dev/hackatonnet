@@ -2,7 +2,6 @@ package com.esprit.pi.services;
 
 import com.esprit.pi.dtos.MentorRecommendationDTO;
 import com.esprit.pi.entities.ListMentor;
-import com.esprit.pi.entities.MentorRecommendation;
 import com.esprit.pi.entities.Team;
 import com.esprit.pi.entities.User;
 import com.esprit.pi.repositories.ListMentorRepository;
@@ -28,7 +27,7 @@ public class MentorMatchingService {
     private final ListMentorRepository listMentorRepository;
     private final ObjectMapper objectMapper;
 
-    public List<MentorRecommendationDTO> getRecommendedMentorsForTeam(Long teamId, int count) {
+    public List<MentorRecommendationDTO> getRecommendedMentorsForTeam(Long teamId, Long count) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new RuntimeException("Team not found with ID: " + teamId));
 
@@ -66,4 +65,10 @@ public class MentorMatchingService {
                 .map(ListMentor::getMentor)
                 .collect(Collectors.toList());
     }
+
+
+
+
+
+
 }

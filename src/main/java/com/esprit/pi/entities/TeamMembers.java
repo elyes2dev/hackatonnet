@@ -41,7 +41,7 @@ public class TeamMembers {
     private Role role;
 
     @OneToMany(mappedBy = "teamMember", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore // Prevents serialization of teamDiscussions to break the loop
+    @JsonIgnore
     private List<TeamDiscussion> teamDiscussions;
 
     @OneToOne(mappedBy = "teamMember", cascade = CascadeType.ALL)

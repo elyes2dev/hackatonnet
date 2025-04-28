@@ -1,14 +1,20 @@
 package com.esprit.pi.controllers;
 
+import com.esprit.pi.dtos.TeamMembershipDTO;
 import com.esprit.pi.entities.TeamMembers;
 import com.esprit.pi.services.ITeamMembersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Collections;
+
+
+
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/team-members")
@@ -74,6 +80,19 @@ public class TeamMembersController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<TeamMembershipDTO>> getTeamMembershipsByUserId(@PathVariable Long userId) {
+        try {
+            List<TeamMembers> teamMembers = teamMembersService.findAllTeamMembersByUserId(userId);
+            List<TeamMembershipDTO> dtos = teamMembers.stream()
+                    .map(TeamMembershipDTO::new)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
         }
     }
 }

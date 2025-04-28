@@ -47,4 +47,21 @@ public class TeamMembersService implements ITeamMembersService  {
     public List<TeamMembers> findMembersByTeamId(Long teamId) {
         return teamMembersRepository.findByTeamId(teamId);
     }
+
+    public List<TeamMembers> findAllTeamMembersByUserId(Long userId) {
+        List<TeamMembers> teamMembers = teamMembersRepository.findAllByUserId(userId);
+        if (teamMembers.isEmpty()) {
+            throw new RuntimeException("No team memberships found for user ID: " + userId);
+        }
+        return teamMembers;
+    }
+
+    // Remove @Override for troubleshooting
+    public TeamMembers findTeamMemberByUserId(Long userId) {
+        List<TeamMembers> teamMembers = teamMembersRepository.findAllByUserId(userId);
+        if (teamMembers.isEmpty()) {
+            throw new RuntimeException("TeamMember not found for user ID: " + userId);
+        }
+        return teamMembers.get(0);
+    }
 }

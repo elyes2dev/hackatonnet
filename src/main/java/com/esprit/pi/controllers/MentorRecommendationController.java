@@ -1,16 +1,24 @@
 package com.esprit.pi.controllers;
 
+import com.esprit.pi.dtos.MentorRecommendationDTO;
+import com.esprit.pi.entities.ListMentor;
+import com.esprit.pi.entities.TeamMembers;
 import com.esprit.pi.entities.User;
+import com.esprit.pi.repositories.ListMentorRepository;
+import com.esprit.pi.repositories.TeamMembersRepository;
 import com.esprit.pi.services.DataExportService;
 import com.esprit.pi.services.MentorMatchingService;
 import com.esprit.pi.services.TeamService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/mentor-recommendations")
@@ -21,6 +29,9 @@ public class MentorRecommendationController {
     private final MentorMatchingService mentorMatchingService;
     private final TeamService teamService;
     private final ObjectMapper objectMapper;
+    private final ListMentorRepository listMentorRepository;
+    private final TeamMembersRepository teamMembersRepository;
+
 
     /**
      * Get recommended mentors for a specific team
@@ -76,4 +87,93 @@ public class MentorRecommendationController {
             return ResponseEntity.status(500).body(Map.of("error", "Failed to assign mentor: " + e.getMessage()));
         }
     }
+
+
+
+    /**
+     * Check if a mentor is available for assignment in a hackathon
+     *
+     * @param mentorId The ID of the mentor
+     * @param hackathonId The ID of the hackathon
+     * @return Availability status with current and maximum team counts
+     */
+    @GetMapping("/mentors/{mentorId}/availability")
+    public ResponseEntity<?> checkMentorAvailability(
+            @PathVariable Long mentorId,
+            @RequestParam Long hackathonId) {
+
+        // Find the mentor's maximum team count from ListMentor
+        Optional<ListMentor> mentorList = listMentorRepository.findByMentorIdAndHackathonId(mentorId, hackathonId);
+
+        if (mentorList.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(
+                            "available", false,
+                            "currentTeams", 0,
+                            "maxTeams", 0,
+                            "message", "Mentor has not registered for this hackathon"
+                    ));
+        }
+
+        int maxTeams = mentorList.get().getNumberOfTeams();
+
+        // Count current teams the mentor is part of in this hackathon
+        int currentTeams = teamMembersRepository.countByUserIdAndRoleAndTeamHackathonId(
+                mentorId,
+                TeamMembers.Role.MENTOR,
+                hackathonId
+        );
+
+        boolean isAvailable = currentTeams < maxTeams;
+
+        return ResponseEntity.ok(Map.of(
+                "available", isAvailable,
+                "currentTeams", currentTeams,
+                "maxTeams", maxTeams
+        ));
+    }
+
+    /**
+     * Get available mentors with recommendations for a team
+     *
+     * @param teamId The ID of the team
+     * @param hackathonId The ID of the hackathon
+     * @return List of recommended mentors who are still available
+     */
+    @PostMapping("/available-mentors/{teamId}")
+    public ResponseEntity<?> getAvailableMentorRecommendations(
+            @PathVariable Long teamId,
+            @RequestParam Long hackathonId) {
+
+        // Get all recommendations first
+        List<MentorRecommendationDTO> recommendedMentors = mentorMatchingService.getRecommendedMentorsForTeam(teamId, hackathonId);
+
+        // Filter to only include available mentors
+        List<MentorRecommendationDTO> availableMentors = recommendedMentors.stream()
+                .filter(mentorDTO -> {
+                    Optional<ListMentor> mentorList = listMentorRepository.findByMentorIdAndHackathonId(
+                            mentorDTO.getMentorId(), hackathonId
+                    );
+
+                    if (mentorList.isEmpty()) {
+                        return false;
+                    }
+
+                    int maxTeams = mentorList.get().getNumberOfTeams();
+                    int currentTeams = teamMembersRepository.countByUserIdAndRoleAndTeamHackathonId(
+                            mentorDTO.getMentorId(),
+                            TeamMembers.Role.MENTOR,
+                            hackathonId
+                    );
+
+                    return currentTeams < maxTeams;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(Map.of(
+                "recommendedMentors", availableMentors
+        ));
+    }
+
 }
+

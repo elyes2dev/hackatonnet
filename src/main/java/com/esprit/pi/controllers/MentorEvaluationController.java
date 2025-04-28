@@ -42,26 +42,35 @@ public class MentorEvaluationController {
                 throw new IllegalArgumentException("Rating must be between 0 and 5");
             }
 
-            // Validate mentor exists
-            // Set static mentor and team with ID = 1
-            User mentor = userService.getUserById(1L)
-                    .orElseThrow(() -> new IllegalArgumentException("Mentor with ID 1 not found"));
-            Team team = new Team(); // You can inject a TeamService if needed
-            team.setId(1L); // Minimal setup, assumes team exists in DB
+            // Validate mentor exists (use the mentorId from the request payload)
+            if (evaluation.getMentor() == null || evaluation.getMentor().getId() == null) {
+                throw new IllegalArgumentException("Mentor ID is required");
+            }
 
-            evaluation.setMentor(mentor);
-            evaluation.setTeam(team);
+            Long mentorId = evaluation.getMentor().getId();
+            User mentor = userService.getUserById(mentorId)
+                    .orElseThrow(() -> new IllegalArgumentException("Mentor with ID " + mentorId + " not found"));
+
+            // Validate team exists (use the teamId from the request payload)
+            if (evaluation.getTeam() == null || evaluation.getTeam().getId() == null) {
+                throw new IllegalArgumentException("Team ID is required");
+            }
+
+            // Team validation would ideally use a TeamService
+            // For now we'll assume the team exists with the given ID
+            // If you have a TeamService, add a validation here
 
             MentorEvaluation created = evaluationService.createEvaluation(evaluation);
 
-            // Always refresh user with ID 1
-            userService.updateUserPointsAndBadge(1L);
+            // Update points and badge for the specific mentor
+            userService.updateUserPointsAndBadge(mentorId);
 
             return new ResponseEntity<>(created, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
+
 
     // Read
     @GetMapping
@@ -127,12 +136,13 @@ public class MentorEvaluationController {
             }
 
             // Preserve relationships - don't overwrite them
-            // (unless you specifically want to allow changing mentor/team)
+            // (Mentor and Team shouldn't change during an update)
 
             MentorEvaluation updated = evaluationService.updateEvaluation(existingEvaluation);
 
-            // Always refresh user with ID 1
-            userService.updateUserPointsAndBadge(1L);
+            // Update points and badge for the specific mentor
+            Long mentorId = existingEvaluation.getMentor().getId();
+            userService.updateUserPointsAndBadge(mentorId);
 
             return new ResponseEntity<>(updated, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
@@ -141,6 +151,7 @@ public class MentorEvaluationController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     // Delete
     @DeleteMapping("/{id}")
@@ -152,17 +163,19 @@ public class MentorEvaluationController {
     public ResponseEntity<Void> deleteEvaluation(@PathVariable Long id) {
         Optional<MentorEvaluation> existingEvaluation = evaluationService.getEvaluationById(id);
         if (existingEvaluation.isPresent()) {
+            // Store mentor ID before deletion
+            Long mentorId = existingEvaluation.get().getMentor().getId();
+
             evaluationService.deleteEvaluation(id);
 
-            // Always refresh user with ID 1
-            userService.updateUserPointsAndBadge(1L);
+            // Update points and badge for the specific mentor
+            userService.updateUserPointsAndBadge(mentorId);
 
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
     // Add a new endpoint to get mentor's current badge level
     @GetMapping("/mentor/{mentorId}/badge")
     @Operation(summary = "Get mentor's current badge level")

@@ -52,9 +52,6 @@ public class UserService implements IUserService {
     public User createUser(User user) {
         // Check if roles are provided; otherwise, assign a default role
 
-        Role defaultRole = roleRepository.findByName("ROLE_USER");
-        user.getRoles().add(defaultRole);
-
         return userRepository.save(user);
     }
 

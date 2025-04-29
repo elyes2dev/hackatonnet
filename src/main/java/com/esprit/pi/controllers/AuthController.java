@@ -82,6 +82,7 @@ public class AuthController {
                 // Replace the roles collection with the existing roles from DB
                 user.setRoles(userRoles);
             }
+            user.setPassword(encoder.encode(user.getPassword()));
 
             userController.createUser(user);
             response.put("message", "User registered successfully");

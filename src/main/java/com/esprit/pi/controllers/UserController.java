@@ -13,10 +13,7 @@ import com.esprit.pi.services.UserService;
 
 
 import java.beans.Encoder;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/users")
@@ -42,10 +39,29 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        String unsecurePaswword = user.getPassword();
-        user.setPassword(encoder.encode(unsecurePaswword));
-        return userService.createUser(user);
+    public ResponseEntity<?> createUser(@RequestBody User user) {
+        try {
+            // Process roles correctly
+            if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+                Set<Role> managedRoles = new HashSet<>();
+
+                for (Role role : user.getRoles()) {
+                    // Find the role by name from the repository
+                    Role managedRole = roleRepository.findByName(role.getName());
+
+                    managedRoles.add(managedRole);
+                }
+
+                // Replace with managed entities
+                user.setRoles(managedRoles);
+            }
+
+            // Now save the user
+            User savedUser = userService.createUser(user);
+            return ResponseEntity.ok(savedUser);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error creating user: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")

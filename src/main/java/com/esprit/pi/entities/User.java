@@ -11,6 +11,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.jdbc.Work;
 import org.springframework.security.core.GrantedAuthority;
@@ -48,6 +49,7 @@ public class User implements UserDetails {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
+    @Setter
     @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "user_roles",
@@ -123,7 +125,6 @@ public class User implements UserDetails {
         return badge;
     }
 
-   
 
     public enum BadgeLevel {
         JUNIOR_COACH,
@@ -218,9 +219,6 @@ public class User implements UserDetails {
         return roles;
     }
 
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
     private Integer mentorPoints;
 
 

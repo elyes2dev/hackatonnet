@@ -34,6 +34,7 @@ public class TicketController {
     public Ticket createTicket(@RequestBody TicketDTO dto) {
         User user = userRepository.findById(dto.userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        System.out.println("Id " + dto.userId);
 
         Ticket ticket = new Ticket();
         ticket.setDescription(dto.description);

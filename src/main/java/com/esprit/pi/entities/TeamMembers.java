@@ -23,7 +23,7 @@ public class TeamMembers {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne()
     @JoinColumn(name = "team_id", nullable = false)
     @JsonBackReference
     private Team team;

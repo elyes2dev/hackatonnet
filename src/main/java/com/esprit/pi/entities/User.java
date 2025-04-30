@@ -235,7 +235,7 @@ public class User implements UserDetails {
                     // Base points for being evaluated
                     int basePoints = 10;
                     // Bonus points based on rating (1-5 stars)
-                    int ratingBonus = eval.getRating() * 2;
+                    int ratingBonus = eval  .getRating() * 2;
                     return basePoints + ratingBonus;
                 })
                 .sum();

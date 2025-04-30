@@ -19,7 +19,6 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/export")
 @Tag(name = "Export", description = "APIs for exporting data")
-@CrossOrigin("*")
 public class ExportController {
 
     @Autowired

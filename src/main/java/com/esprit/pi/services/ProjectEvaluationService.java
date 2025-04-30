@@ -107,4 +107,14 @@ public class ProjectEvaluationService {
     public List<ProjectEvaluation> getTopRatedProjects(Integer minScore) {
         return projectEvaluationRepository.findByScoreGreaterThanEqual(minScore);
     }
+    public List<ProjectEvaluation> getEvaluationsBySubmissionId(Long submissionId) {
+        // First check if the submission exists
+        if (!teamSubmissionRepository.existsById(submissionId)) {
+            throw new EntityNotFoundException("Soumission non trouvée avec l'ID: " + submissionId);
+        }
+
+        // Return all evaluations for this submission
+        return projectEvaluationRepository.findByTeamSubmissionId(submissionId);
+    }
+
 }

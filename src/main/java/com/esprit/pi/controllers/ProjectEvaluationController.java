@@ -111,7 +111,27 @@ public class ProjectEvaluationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    // Add this method to your ProjectEvaluationController class
+    @GetMapping("/submission/{submissionId}")
+    public ResponseEntity<List<ProjectEvaluation>> getEvaluationsBySubmissionId(@PathVariable Long submissionId) {
+        try {
+            List<ProjectEvaluation> evaluations = projectEvaluationService.getEvaluationsBySubmissionId(submissionId);
 
+            // Break circular references to avoid JSON serialization issues
+            evaluations.forEach(eval -> {
+                if (eval.getTeamSubmission() != null) {
+                    eval.getTeamSubmission().setEvaluations(null);
+                }
+            });
+
+            return new ResponseEntity<>(evaluations, HttpStatus.OK);
+        } catch (EntityNotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            System.out.println("Erreur lors de la récupération des évaluations pour la soumission " + submissionId + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
     @GetMapping("/top-rated")
     public ResponseEntity<List<ProjectEvaluation>> getTopRatedProjects(@RequestParam Integer minScore) {

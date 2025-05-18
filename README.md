@@ -30,21 +30,6 @@
 - 🔐 Secure password reset flow
 - 📈 Performance monitoring endpoints
 
-
-## 🏗️ Architecture
-
-```mermaid
-graph TD
-    A[Client] --> B[API Gateway]
-    B --> C[Auth Service]
-    B --> D[Hackathon Service]
-    B --> E[User Service]
-    B --> F[Chat Service]
-    C --> G[MySQL]
-    D --> G
-    E --> G
-    F --> H[Redis]
-    D --> I[AI Matching Service]
     
 ## 🛠️ Tech Stack
 
